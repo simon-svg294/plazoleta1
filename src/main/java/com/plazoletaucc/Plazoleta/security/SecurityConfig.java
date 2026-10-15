@@ -22,9 +22,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth-> auth
                         .requestMatchers(
                                 "/api/v1/categorias/**",
-                                "/api/v1/platos/**",
                                 "/api/v1/auth/**"
                         ).permitAll()
+                        .requestMatchers("/api/v1/platos/**")
+                        .hasRole("PROPIETARIO")
                         .requestMatchers("/api/v1/usuarios/registro-propietario")
                         .hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/v1/restaurantes/**")
