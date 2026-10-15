@@ -2,14 +2,12 @@ package com.plazoletaucc.Plazoleta.security;
 
 import com.plazoletaucc.Plazoleta.entity.Rol;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.util.Date;
 
 @Service
@@ -31,16 +29,14 @@ public class JwtService {
     }
 
     public String generateToken(String correo, Rol rol) {
-        SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
-
         return Jwts.builder()
-                .setSubject(correo)
+                .subject(correo)
                 .claim("rol", rol.name())
-                .setIssuedAt(new Date())
-                .setExpiration(
+                .issuedAt(new Date())
+                .expiration(
                         new Date(System.currentTimeMillis() + JWT_EXPIRATION)
                 )
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(getSecretKey())
                 .compact();
     }
 
@@ -55,7 +51,7 @@ public class JwtService {
         return Jwts.parser()
                 .verifyWith(getSecretKey())
                 .build()
-                .parseSignedClaims(token).getPayload().get("rol").toString();
+                .parseSignedClaims(token).getPayload().get("rol", String.class);
     }
 
     public boolean isTokenValido (String token) {
@@ -63,7 +59,7 @@ public class JwtService {
             Jwts.parser()
                     .verifyWith(getSecretKey())
                     .build()
-                    .parseClaimsJws(token);
+                    .parseSignedClaims(token);
             return true;
         } catch (Exception e) {
             return false;

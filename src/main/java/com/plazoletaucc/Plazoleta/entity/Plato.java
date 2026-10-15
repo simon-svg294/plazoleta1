@@ -17,11 +17,17 @@ public class Plato {
     @Column(nullable=false)
     private String nombre;
     @Column(nullable=false)
-    private Double precio;
+    private Integer precio;
     private String descripcion;
     private String urlImagen;
+    // true = activo. Todo plato nuevo nace en true (HU-03)
     private Boolean estado;
     @ManyToOne(fetch=FetchType.LAZY)
-    @JoinColumn(name="categoria", nullable=false)
+    @JoinColumn(name="idCategoria", nullable=false)
     private Categoria categoria;
+
+    // Todo plato debe estar asociado a un restaurante (HU-03)
+    @ManyToOne(fetch=FetchType.LAZY)
+    @JoinColumn(name="idRestaurante", nullable=false)
+    private Restaurante restaurante;
 }
