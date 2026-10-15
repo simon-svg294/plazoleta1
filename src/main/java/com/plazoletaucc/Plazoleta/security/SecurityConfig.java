@@ -27,6 +27,8 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/v1/usuarios/registro-propietario")
                         .hasRole("ADMINISTRADOR")
+                        .requestMatchers("/api/v1/restaurantes/**")
+                        .hasRole("ADMINISTRADOR")
                         .anyRequest()
                         .authenticated()
                 )
