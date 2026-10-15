@@ -1,0 +1,2154 @@
+{
+  "info": {
+    "_postman_id": "d6ac03ab-5c8b-4f84-b574-194b24846cdb",
+    "name": "Plazoleta - HU Autenticacion",
+    "description": "Pruebas de autenticación y autorización por rol. Orden: carpeta 0 -> (SQL: poner idPropietario) -> A, B, C, D, E.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Preparación (corre esto primero)",
+      "item": [
+        {
+          "name": "0.1 Login ADMIN (semilla de BD)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenAdmin', j.token);"
+                ],
+                "id": "e923e323-c3fc-478d-abe5-003d1166751f"
+              }
+            }
+          ],
+          "id": "b7db8446-ea68-4d28-ac19-f5525b149b83",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{adminCorreo}}\",\n  \"clave\": \"{{adminClave}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Usa el administrador del script.sql. Guarda tokenAdmin."
+          },
+          "response": []
+        },
+        {
+          "name": "0.2 Admin crea PROPIETARIO 1",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('prop1Correo', 'prop' + ts + '@test.com');",
+                  "pm.collectionVariables.set('docTmp', String(ts).slice(-10));"
+                ],
+                "id": "8135074c-9205-466d-8cd6-2be56fe5b714"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ],
+                "id": "4dc3b4c0-8014-4d83-9bca-6f9b56056c44"
+              }
+            }
+          ],
+          "id": "4b190bce-656d-4675-82b0-6314ef787c90",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prop\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{docTmp}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1990-05-20\",\n  \"correo\": \"{{prop1Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/registro-propietario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "registro-propietario"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "0.3 Admin crea PROPIETARIO 2",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('prop2Correo', 'prop' + ts + '@test.com');",
+                  "pm.collectionVariables.set('docTmp', String(ts).slice(-10));"
+                ],
+                "id": "7a315e72-609e-41d9-b24f-a3f161d2a15d"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ],
+                "id": "a663fcab-00d7-4981-a54d-e324d6284934"
+              }
+            }
+          ],
+          "id": "40564577-ddbd-448c-a922-5fc6a725bf63",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prop\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{docTmp}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1990-05-20\",\n  \"correo\": \"{{prop2Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/registro-propietario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "registro-propietario"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "0.4 Login PROPIETARIO 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenProp1', j.token);"
+                ],
+                "id": "ce2a2060-f7ad-41d4-8ad3-3ef7c5056484"
+              }
+            }
+          ],
+          "id": "32e66573-1308-4046-96ee-32dc85026889",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{prop1Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "0.5 Login PROPIETARIO 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenProp2', j.token);"
+                ],
+                "id": "50fbb51e-5ac3-4d04-9e54-c278f3d78f5f"
+              }
+            }
+          ],
+          "id": "59d1fac9-01cb-4e6a-b052-65a5654f239c",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{prop2Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "0.6 Login CLIENTE (insertado por SQL)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenCliente', j.token);"
+                ],
+                "id": "ed74a6cb-7561-4021-9eee-10593623604d"
+              }
+            }
+          ],
+          "id": "4f04f13b-c481-4044-b6de-cbb339337e55",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{clienteCorreo}}\",\n  \"clave\": \"{{adminClave}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Requiere haber corrido 02_usuarios_de_prueba.sql"
+          },
+          "response": []
+        },
+        {
+          "name": "0.7 Login EMPLEADO (insertado por SQL)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenEmpleado', j.token);"
+                ],
+                "id": "a8e20e79-1580-4cdd-bbc0-a519db8f70cd"
+              }
+            }
+          ],
+          "id": "fd005188-9ad5-45e9-a336-b068957e9857",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{empleadoCorreo}}\",\n  \"clave\": \"{{adminClave}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Requiere haber corrido 02_usuarios_de_prueba.sql"
+          },
+          "response": []
+        }
+      ],
+      "id": "9fd47832-f7ef-40ed-bcc3-f8d82e744171",
+      "description": "PAUSA después de esta carpeta: consulta en MySQL el id de prop1Correo y pónlo en la variable de colección idPropietario (SELECT id FROM usuario WHERE correo='...')."
+    },
+    {
+      "name": "A. Login (criterios 1-3)",
+      "item": [
+        {
+          "name": "A1 Login correcto -> 200 + token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenAdmin', j.token);"
+                ],
+                "id": "0515db52-20d6-41a0-8b59-e3ae33ae2ad3"
+              }
+            }
+          ],
+          "id": "fdf6493e-9e56-4b32-bf5e-6e07ff3cab16",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{adminCorreo}}\",\n  \"clave\": \"{{adminClave}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "A2 Clave incorrecta -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "2d2a2e02-9440-463e-a050-b87c66473501"
+              }
+            }
+          ],
+          "id": "e189c0d5-580d-4da0-beae-c166f6b4211b",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{adminCorreo}}\",\n  \"clave\": \"claveMala\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "A3 Correo inexistente -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "02a1f7a0-a477-4c43-9c6f-efd7b4d892af"
+              }
+            }
+          ],
+          "id": "ae806c68-a284-4385-9ebc-c85b4c40f13c",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"noexiste@test.com\",\n  \"clave\": \"Admin123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "A4 Correo mal formado -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "id": "62ac8493-dc6a-4325-8ab0-c1463fc0799b"
+              }
+            }
+          ],
+          "id": "fa42c601-df5e-487f-9436-5cf2dfa43b89",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"esto-no-es-correo\",\n  \"clave\": \"Admin123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "A5 Sin clave -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "id": "2b43977c-a722-4438-921e-63ac962a4596"
+              }
+            }
+          ],
+          "id": "c0331586-ee2a-429c-9274-8ae0a530761a",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{adminCorreo}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "A6 Intentos ilimitados: clave mala (repítela 10 veces en el Runner)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "ef09acc6-8349-429f-8817-47f64ab93b2b"
+              }
+            }
+          ],
+          "id": "d5bd024b-b0e3-47f2-8437-558614415abd",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{adminCorreo}}\",\n  \"clave\": \"claveMala\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "En el Runner pon Iterations=10 solo para esta request. Debe responder 401 las 10 veces (nunca 423/429 ni bloqueo)."
+          },
+          "response": []
+        },
+        {
+          "name": "A7 Tras varios fallos, login correcto sigue funcionando -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenAdmin', j.token);"
+                ],
+                "id": "09a9a731-f9bd-4af6-9f09-d22ea96fa026"
+              }
+            }
+          ],
+          "id": "4425fe28-5982-4bba-bcfa-9b5f8c3a7221",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{adminCorreo}}\",\n  \"clave\": \"{{adminClave}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "d40ddc56-1aa6-43d5-b0bd-2f6c838d43fb"
+    },
+    {
+      "name": "B. Crear propietario (solo ADMINISTRADOR)",
+      "item": [
+        {
+          "name": "B1 SIN token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "b2a6ecf3-8556-423a-a960-3eb9ae0e69f2"
+              }
+            }
+          ],
+          "id": "7fb033b2-b9ab-4455-a4dc-d7e57ce4795e",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prop\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{docTmp}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1990-05-20\",\n  \"correo\": \"{{prop1Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/registro-propietario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "registro-propietario"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "B2 token inválido -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "c7406575-5111-4204-96fb-115de9bd7089"
+              }
+            }
+          ],
+          "id": "59481dc5-c9c7-476e-bd1d-177145d8cba2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer abc.def.ghi"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prop\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{docTmp}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1990-05-20\",\n  \"correo\": \"{{prop1Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/registro-propietario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "registro-propietario"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "B3 PROPIETARIO -> 403",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('tmpCorreo', 'prop' + ts + '@test.com');",
+                  "pm.collectionVariables.set('docTmp', String(ts).slice(-10));"
+                ],
+                "id": "f8fdbe78-31ef-4a41-92d9-3cafbda0a205"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "5dd25c6b-baca-488b-a05d-eb11a87137b2"
+              }
+            }
+          ],
+          "id": "ff8d8984-3281-4fb8-aca8-b095108336a8",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prop\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{docTmp}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1990-05-20\",\n  \"correo\": \"{{prop1Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/registro-propietario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "registro-propietario"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "B4 CLIENTE -> 403",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('tmpCorreo', 'prop' + ts + '@test.com');",
+                  "pm.collectionVariables.set('docTmp', String(ts).slice(-10));"
+                ],
+                "id": "d06e31fb-b426-478b-8540-d37355fbf31b"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "18680de6-2b49-420f-84ff-f8ccb05ed268"
+              }
+            }
+          ],
+          "id": "19341dbb-5b2a-4351-b0ff-11873afb9204",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prop\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{docTmp}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1990-05-20\",\n  \"correo\": \"{{prop1Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/registro-propietario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "registro-propietario"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "B5 EMPLEADO -> 403",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('tmpCorreo', 'prop' + ts + '@test.com');",
+                  "pm.collectionVariables.set('docTmp', String(ts).slice(-10));"
+                ],
+                "id": "f94987d5-fb59-4a6e-af42-ad5296c60767"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "6db6b164-b558-4a7c-a5ba-7312752b3031"
+              }
+            }
+          ],
+          "id": "b49cbd66-9e52-4e82-b667-e15e58ea4450",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prop\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{docTmp}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1990-05-20\",\n  \"correo\": \"{{prop1Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/registro-propietario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "registro-propietario"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "B6 ADMINISTRADOR -> 201",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('tmpCorreo', 'prop' + ts + '@test.com');",
+                  "pm.collectionVariables.set('docTmp', String(ts).slice(-10));"
+                ],
+                "id": "8930f3d2-d1bd-4531-a48d-8bb980361baf"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ],
+                "id": "f488b573-c216-4d29-89c8-ad9071764e14"
+              }
+            }
+          ],
+          "id": "2f9a93a3-81f2-48ed-9a87-3415a4d7a8a6",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prop\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{docTmp}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1990-05-20\",\n  \"correo\": \"{{tmpCorreo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/registro-propietario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "registro-propietario"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "2e3116f1-82aa-4859-9a6a-3be793d74b1b"
+    },
+    {
+      "name": "C. Crear empleado (solo PROPIETARIO)",
+      "item": [
+        {
+          "name": "C1 SIN token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "b8487f51-2bbf-477d-9ed0-fd61421da007"
+              }
+            }
+          ],
+          "id": "28cd33e7-413f-4693-b84e-af37810d1ddf",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "empleado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "C2 token inválido -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "c3dd8834-acc1-4934-892d-4321d84dec2d"
+              }
+            }
+          ],
+          "id": "9e35216a-e69b-4ddb-9706-40f102fdc245",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer abc.def.ghi"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "empleado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "C3 ADMINISTRADOR -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "c73aa184-9e9b-42e0-9c85-b1f994dca190"
+              }
+            }
+          ],
+          "id": "f7786d6a-07db-4251-aaa5-9f2b31f09be4",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "empleado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "C4 CLIENTE -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "f35242bc-93a1-4250-b2a3-59320c97d925"
+              }
+            }
+          ],
+          "id": "0f9b833e-ffca-48ff-b336-2023d17f80fc",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "empleado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "C5 EMPLEADO -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "60b8bf82-7894-42d4-8504-9d44dac6a4b0"
+              }
+            }
+          ],
+          "id": "50f63b32-bdf5-467a-989b-1bd9387f12db",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "empleado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "C6 PROPIETARIO pasa la seguridad (NO 401/403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('No es 401 ni 403 (la seguridad lo dejó pasar)', () => pm.expect(pm.response.code).to.not.be.oneOf([401,403]));",
+                  "// Hoy el controlador del empleado no existe, así que se espera 404 hasta implementar su HU."
+                ],
+                "id": "3be466b4-79a4-458a-a91f-c9bf99417936"
+              }
+            }
+          ],
+          "id": "30b4e3ac-6383-4b93-b22c-dd89c3ee6e21",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "empleado"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "9c4c9b3e-e51d-48a1-bdc5-e52084aa701b",
+      "description": "El controlador /usuarios/empleado no existe todavía en el proyecto: solo se puede probar la regla de seguridad."
+    },
+    {
+      "name": "D. Crear restaurante (solo ADMINISTRADOR)",
+      "item": [
+        {
+          "name": "D1 SIN token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "69bf5740-621c-47e6-833e-d02e2fc1b53f"
+              }
+            }
+          ],
+          "id": "85e853b3-59bf-4062-8d65-013dce49fb62",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Restaurante {{ts}}\",\n  \"nit\": \"{{nitTmp}}\",\n  \"direccion\": \"Calle 1 # 2-3\",\n  \"telefono\": \"+573009998877\",\n  \"urlLogo\": \"http://logo.com/logo.png\",\n  \"idPropietario\": \"{{idPropietario}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "D2 token inválido -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "ba04e85f-8922-41a7-8bed-7c3306bac91f"
+              }
+            }
+          ],
+          "id": "10b2130a-9631-4b48-9188-d3e885dcc9f0",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer abc.def.ghi"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Restaurante {{ts}}\",\n  \"nit\": \"{{nitTmp}}\",\n  \"direccion\": \"Calle 1 # 2-3\",\n  \"telefono\": \"+573009998877\",\n  \"urlLogo\": \"http://logo.com/logo.png\",\n  \"idPropietario\": \"{{idPropietario}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "D3 PROPIETARIO -> 403",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('ts', ts);",
+                  "pm.collectionVariables.set('nitTmp', String(ts).slice(-9));"
+                ],
+                "id": "93c94cd0-26dc-4c68-b8e3-4623b15257f5"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "9db408d8-a5cc-4422-9bd6-5f70c95af2d3"
+              }
+            }
+          ],
+          "id": "5a27be1a-0b93-4bdd-bb31-745e705ac757",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Restaurante {{ts}}\",\n  \"nit\": \"{{nitTmp}}\",\n  \"direccion\": \"Calle 1 # 2-3\",\n  \"telefono\": \"+573009998877\",\n  \"urlLogo\": \"http://logo.com/logo.png\",\n  \"idPropietario\": \"{{idPropietario}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "D4 CLIENTE -> 403",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('ts', ts);",
+                  "pm.collectionVariables.set('nitTmp', String(ts).slice(-9));"
+                ],
+                "id": "56caa8b6-968a-488e-97a2-10a4f6f9a132"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "e178328a-1797-44e9-a3cc-237f1317905e"
+              }
+            }
+          ],
+          "id": "2be8b673-8d20-4dad-b4e7-405e8cdc479e",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Restaurante {{ts}}\",\n  \"nit\": \"{{nitTmp}}\",\n  \"direccion\": \"Calle 1 # 2-3\",\n  \"telefono\": \"+573009998877\",\n  \"urlLogo\": \"http://logo.com/logo.png\",\n  \"idPropietario\": \"{{idPropietario}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "D5 EMPLEADO -> 403",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('ts', ts);",
+                  "pm.collectionVariables.set('nitTmp', String(ts).slice(-9));"
+                ],
+                "id": "ad63491e-b4a9-4081-832c-9b1c70f3ceea"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "50fc21f6-d9aa-4bfc-af1f-79a00823a7da"
+              }
+            }
+          ],
+          "id": "37dfc66f-57a3-413e-a065-ab296cf839b5",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Restaurante {{ts}}\",\n  \"nit\": \"{{nitTmp}}\",\n  \"direccion\": \"Calle 1 # 2-3\",\n  \"telefono\": \"+573009998877\",\n  \"urlLogo\": \"http://logo.com/logo.png\",\n  \"idPropietario\": \"{{idPropietario}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "D6 ADMINISTRADOR -> 201 (guarda idRestaurante)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('ts', ts);",
+                  "pm.collectionVariables.set('nitTmp', String(ts).slice(-9));"
+                ],
+                "id": "691281c6-cb1f-4249-9dc4-c47b601ff2ed"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('idRestaurante', pm.response.json().id);"
+                ],
+                "id": "f14db9bc-8246-4b95-972b-f87c3c1b8d2e"
+              }
+            }
+          ],
+          "id": "8a40bd9c-7c9b-4a6f-a9e1-34b8ea179523",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Restaurante {{ts}}\",\n  \"nit\": \"{{nitTmp}}\",\n  \"direccion\": \"Calle 1 # 2-3\",\n  \"telefono\": \"+573009998877\",\n  \"urlLogo\": \"http://logo.com/logo.png\",\n  \"idPropietario\": \"{{idPropietario}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ]
+            },
+            "description": "Requiere la variable idPropietario (id de prop1Correo en la BD)."
+          },
+          "response": []
+        }
+      ],
+      "id": "05bb9209-2052-4834-b80c-a3bae5ff140b"
+    },
+    {
+      "name": "E. Crear/modificar plato (solo PROPIETARIO dueño)",
+      "item": [
+        {
+          "name": "E1 POST SIN token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "4389de7d-5f3e-48e0-9aff-e01724480bc0"
+              }
+            }
+          ],
+          "id": "2934c332-0629-4983-95d9-ad8bca36dd04",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bandeja paisa\",\n  \"precio\": 25000,\n  \"descripcion\": \"Plato tipico\",\n  \"urlImagen\": \"http://img.com/a.png\",\n  \"idCategoria\": 2,\n  \"idRestaurante\": \"{{idRestaurante}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "registro"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E2 POST token inválido -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "e4038c7d-cb14-4259-b804-2d03de21421f"
+              }
+            }
+          ],
+          "id": "16015ccb-375c-4345-ba2b-23e56833b9f7",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer abc.def.ghi"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bandeja paisa\",\n  \"precio\": 25000,\n  \"descripcion\": \"Plato tipico\",\n  \"urlImagen\": \"http://img.com/a.png\",\n  \"idCategoria\": 2,\n  \"idRestaurante\": \"{{idRestaurante}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "registro"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E3 ADMINISTRADOR -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "6d112d10-501e-4aeb-9dd4-4cb0b2a84b0b"
+              }
+            }
+          ],
+          "id": "62469b0b-8b5a-4d08-b022-7825d026172c",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bandeja paisa\",\n  \"precio\": 25000,\n  \"descripcion\": \"Plato tipico\",\n  \"urlImagen\": \"http://img.com/a.png\",\n  \"idCategoria\": 2,\n  \"idRestaurante\": \"{{idRestaurante}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "registro"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E4 CLIENTE -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "8bc9f9fa-aa40-4774-af45-a3db18c66b55"
+              }
+            }
+          ],
+          "id": "4cbf4da0-7804-4e2b-8577-8c17456869a8",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bandeja paisa\",\n  \"precio\": 25000,\n  \"descripcion\": \"Plato tipico\",\n  \"urlImagen\": \"http://img.com/a.png\",\n  \"idCategoria\": 2,\n  \"idRestaurante\": \"{{idRestaurante}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "registro"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E5 PROPIETARIO de OTRO restaurante -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "c655dfb7-75e6-4155-aee7-88c0104c7cfe"
+              }
+            }
+          ],
+          "id": "03d777d4-68ad-408e-a4c6-70b486405f5d",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp2}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bandeja paisa\",\n  \"precio\": 25000,\n  \"descripcion\": \"Plato tipico\",\n  \"urlImagen\": \"http://img.com/a.png\",\n  \"idCategoria\": 2,\n  \"idRestaurante\": \"{{idRestaurante}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "registro"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E6 PROPIETARIO dueño -> 201 (guarda idPlato)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const j=pm.response.json();",
+                  "pm.test('Plato nace activo', () => pm.expect(j.estado).to.eql(true));",
+                  "pm.collectionVariables.set('idPlato', j.id);"
+                ],
+                "id": "582798ed-6e9d-47e8-8941-2f8b15a16bf2"
+              }
+            }
+          ],
+          "id": "36760e27-b50c-4ebc-b36b-1b4dc08a6a9d",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bandeja paisa\",\n  \"precio\": 25000,\n  \"descripcion\": \"Plato tipico\",\n  \"urlImagen\": \"http://img.com/a.png\",\n  \"idCategoria\": 2,\n  \"idRestaurante\": \"{{idRestaurante}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "registro"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E7 PATCH SIN token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "3b2d96a4-a20f-4e0b-89d3-8aae78323d3f"
+              }
+            }
+          ],
+          "id": "90aa821c-e75c-43a9-8a16-d3fd819f2a00",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precio\": 30000,\n  \"descripcion\": \"Precio y descripcion nuevos\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E8 PATCH ADMINISTRADOR -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "7040b3be-711f-4f38-8083-72df04275b32"
+              }
+            }
+          ],
+          "id": "3f04e9b1-0257-411d-8795-2d39f437c250",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precio\": 30000,\n  \"descripcion\": \"Precio y descripcion nuevos\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E9 PATCH PROPIETARIO de otro restaurante -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "7da16acc-b346-40f6-bf41-75b7fc8a8a74"
+              }
+            }
+          ],
+          "id": "5d61b4c0-f2a9-4abd-8c01-a42dcd2bbd8d",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp2}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precio\": 30000,\n  \"descripcion\": \"Precio y descripcion nuevos\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E10 PATCH PROPIETARIO dueño -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "id": "4841f038-d47e-424a-b974-e658df276b09"
+              }
+            }
+          ],
+          "id": "c0c75b90-1680-45ea-ae6f-e442f184a82b",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precio\": 30000,\n  \"descripcion\": \"Precio y descripcion nuevos\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "84c306b4-46b5-4ecd-873d-a8f4029f3ba4"
+    }
+  ],
+  "variable": [
+    {
+      "id": "e7c3786c-7c2b-4f29-aedc-7068325f1a87",
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "id": "5814a69c-0a84-412f-8f8d-b9efd3fa587b",
+      "key": "adminCorreo",
+      "value": "admin@plazoleta.com"
+    },
+    {
+      "id": "f44ea3fe-8d53-4770-8352-3347d1098dac",
+      "key": "adminClave",
+      "value": "Admin123*"
+    },
+    {
+      "id": "e31461d7-083b-4b9d-85bf-230c9b3da336",
+      "key": "clienteCorreo",
+      "value": "cliente@plazoleta.com"
+    },
+    {
+      "id": "2f49185e-62af-4117-8979-1ac1c6957a9e",
+      "key": "empleadoCorreo",
+      "value": "empleado@plazoleta.com"
+    },
+    {
+      "id": "ad2d1112-6816-4262-8085-e7245bb4ffa7",
+      "key": "idPropietario",
+      "value": ""
+    },
+    {
+      "id": "39c737e9-0b31-4ce4-88b1-819ee066cbb0",
+      "key": "idRestaurante",
+      "value": ""
+    },
+    {
+      "id": "5a21267f-c8a5-4045-b2fc-44d77c45b726",
+      "key": "idPlato",
+      "value": ""
+    },
+    {
+      "id": "04320293-1bd6-40f9-abcb-efd605accbcd",
+      "key": "tokenAdmin",
+      "value": ""
+    },
+    {
+      "id": "b9c5bcca-8415-48c9-bdba-36bbd5aaec45",
+      "key": "prop1Correo",
+      "value": ""
+    },
+    {
+      "id": "5db23a5e-899c-4294-abe0-3e7227c296a5",
+      "key": "docTmp",
+      "value": ""
+    },
+    {
+      "id": "b4060490-7b4c-43c3-bdee-13ef08c930ec",
+      "key": "prop2Correo",
+      "value": ""
+    },
+    {
+      "id": "c31d4f8c-985d-4f04-aabe-928bc521052a",
+      "key": "tokenProp1",
+      "value": ""
+    },
+    {
+      "id": "31bb9d8c-d6a7-4dd2-a34f-b35493c1ff81",
+      "key": "tokenProp2",
+      "value": ""
+    },
+    {
+      "id": "3011e8bf-bf49-4635-8a45-f85159163d47",
+      "key": "tokenCliente",
+      "value": ""
+    },
+    {
+      "id": "b6220ccb-67f6-4edf-a434-51be2de74e95",
+      "key": "tokenEmpleado",
+      "value": ""
+    },
+    {
+      "id": "430ec18a-d0e4-40e8-97c7-84cd3b014b66",
+      "key": "tmpCorreo",
+      "value": ""
+    },
+    {
+      "id": "5784c7d3-f8fd-4716-a4a2-423e65b73c0b",
+      "key": "ts",
+      "value": ""
+    },
+    {
+      "id": "5338b247-147f-44df-a82d-3939418a06ea",
+      "key": "nitTmp",
+      "value": ""
+    }
+  ]
+}

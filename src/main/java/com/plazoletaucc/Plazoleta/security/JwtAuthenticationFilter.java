@@ -22,27 +22,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        System.out.println(
-                request.getHeader("Authorization")
-        );
         String authorizationHeader = request.getHeader("Authorization");
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
-        String token = authorizationHeader.substring(7);
-        System.out.println("Token recibido: " + token);
-        System.out.println("Correo: " + jwtService.extractCorreo(token));
-        System.out.println("Rol: " + jwtService.extractRol(token));
-        if(!jwtService.isTokenValido(token)) {
-            filterChain.doFilter(request, response);
-            return;
+        try {
+            String token = authorizationHeader.substring(7);
+            if (jwtService.isTokenValido(token)
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
+                String correo = jwtService.extractCorreo(token);
+                String rol = jwtService.extractRol(token);
+                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(correo, null, List.of(new SimpleGrantedAuthority("ROLE_" + rol)));
+                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            }
+        } catch (Exception ignored) {
+            // Token inválido/vencido: se sigue sin autenticación y el EntryPoint responde 401
         }
-        String correo = jwtService.extractCorreo(token);
-        String rol = jwtService.extractRol(token);
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(correo, null, List.of(new SimpleGrantedAuthority("ROLE_" + rol)));
-        authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return request.getServletPath().equals("/api/v1/auth/login");
     }
 }
