@@ -1,6 +1,7 @@
 package com.plazoletaucc.Plazoleta.service.impl;
 
 import com.plazoletaucc.Plazoleta.dto.reponse.PlatoResponseDTO;
+import com.plazoletaucc.Plazoleta.dto.request.ModificarPlatoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.PlatoRequestDTO;
 import com.plazoletaucc.Plazoleta.entity.Categoria;
 import com.plazoletaucc.Plazoleta.entity.Plato;
@@ -44,6 +45,24 @@ public class PlatoServiceImpl implements PlatoService {
                 .restaurante(restaurante)
                 .build();
 
+        return convertir(platoRespository.save(plato));
+    }
+
+    // HU-04: modificar plato. Solo cambia precio y descripcion; lo demas no se toca.
+    @Override
+    public PlatoResponseDTO modificarPlato(Integer idPlato, ModificarPlatoRequestDTO dto, String correoUsuario) {
+        // 1. El plato debe existir
+        Plato plato = platoRespository.findById(idPlato)
+                .orElseThrow(() -> new ReglaNegocioException("El plato no existe"));
+
+        // 2. No se permiten modificar platos de otros restaurantes diferentes al propio
+        validarDueno(plato.getRestaurante(), correoUsuario);
+
+        // 3. Se cambian SOLO los dos campos permitidos
+        plato.setPrecio(dto.getPrecio());
+        plato.setDescripcion(dto.getDescripcion());
+
+        // 4. save() sobre un plato que ya tiene id hace UPDATE
         return convertir(platoRespository.save(plato));
     }
 
