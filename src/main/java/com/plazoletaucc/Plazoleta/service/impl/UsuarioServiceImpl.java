@@ -5,11 +5,15 @@ import com.plazoletaucc.Plazoleta.dto.request.RegistroRequestDTO;
 import com.plazoletaucc.Plazoleta.entity.Rol;
 import com.plazoletaucc.Plazoleta.entity.Usuario;
 import com.plazoletaucc.Plazoleta.exception.CorreoDuplicadoException;
+import com.plazoletaucc.Plazoleta.exception.MenorDeEdadException;
 import com.plazoletaucc.Plazoleta.repository.UsuarioRepository;
 import com.plazoletaucc.Plazoleta.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.Period;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +25,11 @@ public class UsuarioServiceImpl implements UsuarioService {
     public RegistroResponseDTO registrarUsuario(RegistroRequestDTO registroRequestDTO) {
         if(usuarioRepository.existsByCorreo(registroRequestDTO.getCorreo())){
             throw new CorreoDuplicadoException("El correo ya existe");
+        }
+
+        int edad = Period.between(registroRequestDTO.getFechaDeNacimiento(), LocalDate.now()).getYears();
+        if (edad < 18) {
+            throw new MenorDeEdadException("El usuario debe ser mayor de edad (18 anios o mas)");
         }
 
         Usuario usuario = Usuario.builder()
