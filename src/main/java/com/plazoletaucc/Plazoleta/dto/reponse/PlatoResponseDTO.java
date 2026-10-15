@@ -1,6 +1,5 @@
 package com.plazoletaucc.Plazoleta.dto.reponse;
 
-import com.plazoletaucc.Plazoleta.entity.Categoria;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,10 +8,12 @@ import lombok.Setter;
 @Setter
 @Builder
 public class PlatoResponseDTO {
+    private Integer id;
     private String nombre;
+    private Integer precio;
     private String descripcion;
-    private Double precio;
     private String urlImagen;
     private Boolean estado;
-    private Categoria categoria;
+    private String categoria;
+    private Integer idRestaurante;
 }
