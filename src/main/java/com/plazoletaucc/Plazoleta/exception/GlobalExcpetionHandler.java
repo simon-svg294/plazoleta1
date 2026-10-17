@@ -18,6 +18,13 @@ public class GlobalExcpetionHandler {
                 .body(correoDuplicadoException.getMessage());
     }
 
+    @ExceptionHandler(DocumentoDuplicadoException.class)
+    public ResponseEntity<String> handleDocumentoDuplicadoException(DocumentoDuplicadoException documentoDuplicadoException) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(documentoDuplicadoException.getMessage());
+    }
+
     // Regla de negocio no cumplida (restaurante/categoria no existe) -> 400
     @ExceptionHandler(ReglaNegocioException.class)
     public ResponseEntity<Map<String, String>> handleReglaNegocio(ReglaNegocioException ex) {
