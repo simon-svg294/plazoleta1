@@ -1,6 +1,7 @@
 package com.plazoletaucc.Plazoleta.controller;
 
 import com.plazoletaucc.Plazoleta.dto.reponse.RegistroResponseDTO;
+import com.plazoletaucc.Plazoleta.dto.request.ClienteRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.EmpleadoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.RegistroRequestDTO;
 import com.plazoletaucc.Plazoleta.service.UsuarioService;
@@ -31,5 +32,11 @@ public class UsuarioController {
                                                              Authentication authentication){
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(usuarioService.crearEmpleado(empleadoRequestDTO, authentication.getName()));
+    }
+
+    @PostMapping("/cliente")
+    public ResponseEntity<RegistroResponseDTO> registrarCliente(@Valid @RequestBody ClienteRequestDTO clienteRequestDTO){
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(usuarioService.registrarCliente(clienteRequestDTO));
     }
 }
