@@ -34,8 +34,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/login",
                                 "/error"
                         ).permitAll()
-                        // HU-08: registro de cliente libre (se implementa en su HU)
-                        // .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/cliente").permitAll()
+                        // HU-08: registro de cliente libre
+                        .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/cliente").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/registro-propietario")
                         .hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/empleado")

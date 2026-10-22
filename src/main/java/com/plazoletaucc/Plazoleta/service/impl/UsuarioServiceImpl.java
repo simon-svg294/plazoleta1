@@ -1,6 +1,7 @@
 package com.plazoletaucc.Plazoleta.service.impl;
 
 import com.plazoletaucc.Plazoleta.dto.reponse.RegistroResponseDTO;
+import com.plazoletaucc.Plazoleta.dto.request.ClienteRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.EmpleadoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.RegistroRequestDTO;
 import com.plazoletaucc.Plazoleta.entity.Rol;
@@ -83,6 +84,36 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .correo(empleadoGuardado.getCorreo())
                 .documentoDeIdentidad(empleadoGuardado.getDocumentoDeIdentidad())
                 .celular(empleadoGuardado.getCelular())
+                .build();
+    }
+
+    @Override
+    public RegistroResponseDTO registrarCliente(ClienteRequestDTO clienteRequestDTO) {
+        if(usuarioRepository.existsByCorreo(clienteRequestDTO.getCorreo())){
+            throw new CorreoDuplicadoException("El correo ya existe");
+        }
+        if(usuarioRepository.existsByDocumentoDeIdentidad(clienteRequestDTO.getDocumentoDeIdentidad())){
+            throw new DocumentoDuplicadoException("El documento de identidad ya existe");
+        }
+
+        Usuario cliente = Usuario.builder()
+                .nombre(clienteRequestDTO.getNombre())
+                .apellido(clienteRequestDTO.getApellido())
+                .documentoDeIdentidad(clienteRequestDTO.getDocumentoDeIdentidad())
+                .celular(clienteRequestDTO.getCelular())
+                .correo(clienteRequestDTO.getCorreo())
+                .clave(passwordEncoder.encode(clienteRequestDTO.getClave()))
+                .rol(Rol.CLIENTE)
+                .build();
+
+        Usuario clienteGuardado = usuarioRepository.save(cliente);
+
+        return RegistroResponseDTO.builder()
+                .nombre(clienteGuardado.getNombre())
+                .apellido(clienteGuardado.getApellido())
+                .correo(clienteGuardado.getCorreo())
+                .documentoDeIdentidad(clienteGuardado.getDocumentoDeIdentidad())
+                .celular(clienteGuardado.getCelular())
                 .build();
     }
 
