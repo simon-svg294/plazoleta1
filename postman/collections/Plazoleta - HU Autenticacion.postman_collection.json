@@ -2052,101 +2052,580 @@
         }
       ],
       "id": "84c306b4-46b5-4ecd-873d-a8f4029f3ba4"
+    },
+    {
+      "name": "F. Habilitar/Deshabilitar plato (HU-07)",
+      "item": [
+        {
+          "name": "F1 PATCH SIN token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "9b0ff51b-d601-4081-9fe1-4e5dab7f5450"
+              }
+            }
+          ],
+          "id": "93b36ab3-3ed0-4a2d-8293-5767e6feb74d",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F2 PATCH token inválido -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "a42fb26b-8e57-4abd-bfae-8839ab57b536"
+              }
+            }
+          ],
+          "id": "51aa1730-4898-4651-9949-bb185287dbc2",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer abc.def.ghi"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F3 PATCH ADMINISTRADOR -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "da3534ad-5788-491e-9f31-8b661607ad75"
+              }
+            }
+          ],
+          "id": "0869ec26-fa0d-4048-9f09-b5a89bebb6fa",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F4 PATCH CLIENTE -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "7a4cafc3-0c93-4c01-ab3e-522b2f52569c"
+              }
+            }
+          ],
+          "id": "6d18a731-27e1-4ce9-a337-2d94855c66e8",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F5 PATCH EMPLEADO -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "283a7774-739c-49e6-a1dd-0efb0c07f2cc"
+              }
+            }
+          ],
+          "id": "49a9d244-e5d7-4eeb-9351-dbcb25d71903",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6 PATCH PROPIETARIO de otro restaurante -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "dc437d50-7d89-46b9-b7e9-9e9975866adf"
+              }
+            }
+          ],
+          "id": "6f7cc93e-8c7c-40f6-be67-d399901ddd8d",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp2}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F7 Dueño DESHABILITA plato -> 200 estado false",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('El plato queda deshabilitado', () => pm.expect(pm.response.json().estado).to.eql(false));",
+                  "pm.test('No se tocan otros campos', () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('idPlato'))));"
+                ],
+                "id": "a5a7bfac-eda0-448b-ae07-7c0b65f927c5"
+              }
+            }
+          ],
+          "id": "662d4f22-0fc7-4cf6-b3e9-b2f09127b0ad",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            },
+            "description": "Requiere haber corrido E6 (guarda idPlato)."
+          },
+          "response": []
+        },
+        {
+          "name": "F8 Dueño HABILITA el plato -> 200 estado true",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('El plato vuelve a estar habilitado', () => pm.expect(pm.response.json().estado).to.eql(true));"
+                ],
+                "id": "5483b130-4949-4d3b-ad79-0fd481a615f6"
+              }
+            }
+          ],
+          "id": "7449e55f-bcc0-4311-b7a4-ffff0a002cef",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F9 Plato inexistente -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Mensaje claro', () => pm.expect(pm.response.json().mensaje).to.eql('El plato no existe'));"
+                ],
+                "id": "4cf8b9d1-54ec-4748-b9de-a3b99f8b2970"
+              }
+            }
+          ],
+          "id": "c28d25e5-4b00-4b32-88e7-e6c27abbfc1a",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/999999/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "999999",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F10 Body sin activo -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Error del campo activo', () => pm.expect(pm.response.json()).to.have.property('activo'));"
+                ],
+                "id": "8966610d-7ef6-48ab-bd8e-8fc1f6d7f0fc"
+              }
+            }
+          ],
+          "id": "f6168154-bf71-4726-9de3-cb9fac97ea98",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "f588081b-fc02-494b-b7f3-d276b119a02e",
+      "description": "HU-07: solo el PROPIETARIO dueño del restaurante del plato puede habilitar/deshabilitar. Correr después de E6."
     }
   ],
   "variable": [
     {
-      "id": "e7c3786c-7c2b-4f29-aedc-7068325f1a87",
+      "id": "9d563746-b0eb-4350-943a-1aadb0831e4d",
       "key": "baseUrl",
       "value": "http://localhost:8080"
     },
     {
-      "id": "5814a69c-0a84-412f-8f8d-b9efd3fa587b",
+      "id": "b801fcad-8cc2-4225-9f28-1c0f8c19ebc6",
       "key": "adminCorreo",
       "value": "admin@plazoleta.com"
     },
     {
-      "id": "f44ea3fe-8d53-4770-8352-3347d1098dac",
+      "id": "a664f0d2-fc30-4308-bb25-0e448fb84138",
       "key": "adminClave",
       "value": "Admin123*"
     },
     {
-      "id": "e31461d7-083b-4b9d-85bf-230c9b3da336",
+      "id": "2f1d2e49-bb0d-455d-90e5-64e991e75dc3",
       "key": "clienteCorreo",
       "value": "cliente@plazoleta.com"
     },
     {
-      "id": "2f49185e-62af-4117-8979-1ac1c6957a9e",
+      "id": "f52076f1-9b23-4481-ab79-a477ae28a64e",
       "key": "empleadoCorreo",
       "value": "empleado@plazoleta.com"
     },
     {
-      "id": "ad2d1112-6816-4262-8085-e7245bb4ffa7",
+      "id": "121bc334-61bf-4213-aa54-9973f63607ec",
       "key": "idPropietario",
       "value": ""
     },
     {
-      "id": "39c737e9-0b31-4ce4-88b1-819ee066cbb0",
+      "id": "26afec3f-8d36-4678-9f60-5bb1fd7d6d99",
       "key": "idRestaurante",
       "value": ""
     },
     {
-      "id": "5a21267f-c8a5-4045-b2fc-44d77c45b726",
+      "id": "49aae31a-678f-4590-8d3f-bc1d9d6c07b1",
       "key": "idPlato",
       "value": ""
     },
     {
-      "id": "04320293-1bd6-40f9-abcb-efd605accbcd",
+      "id": "04f532d1-6720-4b84-b0e3-9018dff85d82",
       "key": "tokenAdmin",
       "value": ""
     },
     {
-      "id": "b9c5bcca-8415-48c9-bdba-36bbd5aaec45",
+      "id": "e444af71-8951-452b-ba14-a87bad677ca1",
       "key": "prop1Correo",
       "value": ""
     },
     {
-      "id": "5db23a5e-899c-4294-abe0-3e7227c296a5",
+      "id": "145709fe-6e0a-426d-998f-ed2c3ee113f9",
       "key": "docTmp",
       "value": ""
     },
     {
-      "id": "b4060490-7b4c-43c3-bdee-13ef08c930ec",
+      "id": "b15f5b8c-da0d-432c-88d5-c5d177886be7",
       "key": "prop2Correo",
       "value": ""
     },
     {
-      "id": "c31d4f8c-985d-4f04-aabe-928bc521052a",
+      "id": "840e81e9-617b-4aff-850a-e078666adf71",
       "key": "tokenProp1",
       "value": ""
     },
     {
-      "id": "31bb9d8c-d6a7-4dd2-a34f-b35493c1ff81",
+      "id": "68746b02-ab84-47e5-8715-2900dbd1b8e9",
       "key": "tokenProp2",
       "value": ""
     },
     {
-      "id": "3011e8bf-bf49-4635-8a45-f85159163d47",
+      "id": "1e445d5b-60df-4330-a228-6fe24438f4f4",
       "key": "tokenCliente",
       "value": ""
     },
     {
-      "id": "b6220ccb-67f6-4edf-a434-51be2de74e95",
+      "id": "770f0795-e5d5-42d6-9103-737f56337680",
       "key": "tokenEmpleado",
       "value": ""
     },
     {
-      "id": "430ec18a-d0e4-40e8-97c7-84cd3b014b66",
+      "id": "742983c9-178d-45c6-826f-43fbfed35420",
       "key": "tmpCorreo",
       "value": ""
     },
     {
-      "id": "5784c7d3-f8fd-4716-a4a2-423e65b73c0b",
+      "id": "0c4b9e60-56e5-43c2-8fee-9669a89159e7",
       "key": "ts",
       "value": ""
     },
     {
-      "id": "5338b247-147f-44df-a82d-3939418a06ea",
+      "id": "de13a710-e278-4cf4-9e0a-e0e567b2bc30",
       "key": "nitTmp",
       "value": ""
     }

@@ -1,6 +1,7 @@
 package com.plazoletaucc.Plazoleta.service.impl;
 
 import com.plazoletaucc.Plazoleta.dto.reponse.PlatoResponseDTO;
+import com.plazoletaucc.Plazoleta.dto.request.HabilitarPlatoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.ModificarPlatoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.PlatoRequestDTO;
 import com.plazoletaucc.Plazoleta.entity.Categoria;
@@ -13,7 +14,9 @@ import com.plazoletaucc.Plazoleta.repository.PlatoRespository;
 import com.plazoletaucc.Plazoleta.repository.RestauranteRepository;
 import com.plazoletaucc.Plazoleta.service.PlatoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -63,6 +66,22 @@ public class PlatoServiceImpl implements PlatoService {
         plato.setDescripcion(dto.getDescripcion());
 
         // 4. save() sobre un plato que ya tiene id hace UPDATE
+        return convertir(platoRespository.save(plato));
+    }
+
+    // HU-07: habilitar/deshabilitar plato. Solo cambia el estado; lo demas queda igual.
+    @Override
+    public PlatoResponseDTO cambiarEstadoPlato(Integer idPlato, HabilitarPlatoRequestDTO dto, String correoUsuario) {
+        // 1. El plato debe existir (404 para no confundirlo con los 400 de regla de negocio)
+        Plato plato = platoRespository.findById(idPlato)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El plato no existe"));
+
+        // 2. Solo el dueño del restaurante del plato puede cambiar su estado
+        validarDueno(plato.getRestaurante(), correoUsuario);
+
+        // 3. Se cambia SOLO el estado: activo = true (habilitado) / false (deshabilitado)
+        plato.setEstado(dto.getActivo());
+
         return convertir(platoRespository.save(plato));
     }
 

@@ -1,6 +1,7 @@
 package com.plazoletaucc.Plazoleta.controller;
 
 import com.plazoletaucc.Plazoleta.dto.reponse.PlatoResponseDTO;
+import com.plazoletaucc.Plazoleta.dto.request.HabilitarPlatoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.ModificarPlatoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.PlatoRequestDTO;
 import com.plazoletaucc.Plazoleta.service.PlatoService;
@@ -36,5 +37,13 @@ public class PlatoController {
                                                            @Valid @RequestBody ModificarPlatoRequestDTO dto,
                                                            Authentication authentication) {
         return ResponseEntity.ok(platoService.modificarPlato(idPlato, dto, authentication.getName()));
+    }
+
+    // HU-07: habilitar/deshabilitar un plato del restaurante propio.
+    @PatchMapping("/{idPlato}/estado")
+    public ResponseEntity<PlatoResponseDTO> cambiarEstadoPlato(@PathVariable Integer idPlato,
+                                                               @Valid @RequestBody HabilitarPlatoRequestDTO dto,
+                                                               Authentication authentication) {
+        return ResponseEntity.ok(platoService.cambiarEstadoPlato(idPlato, dto, authentication.getName()));
     }
 }
