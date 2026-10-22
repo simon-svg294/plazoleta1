@@ -3,7 +3,7 @@ package com.plazoletaucc.Plazoleta.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Entity
 @Table(name="usuario")
@@ -22,7 +22,7 @@ public class Usuario {
     @Column(unique = true)
     private String documentoDeIdentidad;
     private String celular;
-    private Date fechaDeNacimiento;
+    private LocalDate fechaDeNacimiento;
     @Column(nullable=false, unique=true)
     private String correo;
     private String clave;
