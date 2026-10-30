@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -54,5 +55,12 @@ public class GlobalExcpetionHandler {
     @ExceptionHandler(MenorDeEdadException.class)
     public ResponseEntity<Map<String, String>> handleMenorDeEdad(MenorDeEdadException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("mensaje", ex.getMessage()));
+    }
+
+    // HU-07: recurso no encontrado -> 404 manteniendo el formato {"mensaje": "..."}
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> handleResponseStatus(ResponseStatusException ex) {
+        String mensaje = ex.getReason() == null ? "Error en la peticion" : ex.getReason();
+        return ResponseEntity.status(ex.getStatusCode()).body(Map.of("mensaje", mensaje));
     }
 }
