@@ -1,5 +1,6 @@
 package com.plazoletaucc.Plazoleta.controller;
 
+import com.plazoletaucc.Plazoleta.dto.reponse.PaginaResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PlatoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.request.HabilitarPlatoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.ModificarPlatoRequestDTO;
@@ -10,11 +11,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -22,6 +25,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class PlatoController {
     private final PlatoService platoService;
+
+    // HU-10: el cliente lista el menu de un restaurante, paginado y filtrable por categoria.
+    @GetMapping
+    public ResponseEntity<PaginaResponseDTO<PlatoResponseDTO>> listarPlatos(
+            @RequestParam Integer idRestaurante,
+            @RequestParam(required = false) Integer idCategoria,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "10") int tamano) {
+        return ResponseEntity.ok(platoService.listarPlatos(idRestaurante, idCategoria, pagina, tamano));
+    }
 
     @PostMapping("/registro")
     public ResponseEntity<PlatoResponseDTO> registrarPlato(@Valid @RequestBody PlatoRequestDTO platoRequestDTO,

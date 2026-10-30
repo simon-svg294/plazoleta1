@@ -42,6 +42,9 @@ public class SecurityConfig {
                         .hasRole("PROPIETARIO")
                         .requestMatchers("/api/v1/restaurantes/**")
                         .hasRole("ADMINISTRADOR")
+                        // HU-10: el cliente lista el menu de un restaurante
+                        .requestMatchers(HttpMethod.GET, "/api/v1/platos")
+                        .hasRole("CLIENTE")
                         .requestMatchers("/api/v1/platos/**")
                         .hasRole("PROPIETARIO")
                         .anyRequest()
