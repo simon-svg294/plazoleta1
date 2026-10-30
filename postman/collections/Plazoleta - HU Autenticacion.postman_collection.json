@@ -2531,6 +2531,498 @@
       ],
       "id": "f588081b-fc02-494b-b7f3-d276b119a02e",
       "description": "HU-07: solo el PROPIETARIO dueño del restaurante del plato puede habilitar/deshabilitar. Correr después de E6."
+    },
+    {
+      "name": "G. Listar restaurantes (solo CLIENTE) - HU-09",
+      "item": [
+        {
+          "name": "G1 GET SIN token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "0383d418-e573-4d36-8609-38fce84eedb9"
+              }
+            }
+          ],
+          "id": "0a913f9b-1e6c-4af0-8325-b7b409e9096b",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G2 GET token inválido -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "59002b0c-ad14-4e22-bfed-5c5bd06e4616"
+              }
+            }
+          ],
+          "id": "26cc16d0-80bb-45c8-b81e-dd5c238b3091",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer abc.def.ghi"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G3 GET ADMINISTRADOR -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "51864f80-0758-4bd9-9294-e0fb9e92974b"
+              }
+            }
+          ],
+          "id": "2cb70d90-73c3-417e-a7d0-ada6dcf0a1db",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G4 GET PROPIETARIO -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "d4fd2b3e-c068-4c20-953e-901706d315df"
+              }
+            }
+          ],
+          "id": "f88b3b61-3b69-409b-bac9-8870222adb53",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G5 GET EMPLEADO -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "bd60c69b-2b43-42be-86f7-1a7f0f45d050"
+              }
+            }
+          ],
+          "id": "4a4538b3-b6a5-4abc-9c64-da43d6c313a2",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G6 GET CLIENTE -> 200 solo nombre y urlLogo, orden alfabético",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Trae los campos de paginación', () => {",
+                  "  pm.expect(j).to.have.all.keys('contenido','pagina','tamano','totalElementos','totalPaginas');",
+                  "});",
+                  "pm.test('Solo devuelve nombre y urlLogo', () => {",
+                  "  if (j.contenido.length === 0) { return; }",
+                  "  pm.expect(Object.keys(j.contenido[0]).sort()).to.eql(['nombre','urlLogo']);",
+                  "});",
+                  "pm.test('Orden alfabético por nombre', () => {",
+                  "  const nombres = j.contenido.map(r => r.nombre);",
+                  "  const ordenados = [...nombres].sort((a, b) => a.localeCompare(b, 'es'));",
+                  "  pm.expect(nombres).to.eql(ordenados);",
+                  "});"
+                ],
+                "id": "3303abf3-f4ae-435f-a675-f161d2cb074e"
+              }
+            }
+          ],
+          "id": "75a9bbb5-4d34-40f0-886e-ff2587d68f5a",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G7 GET CLIENTE tamano=1 -> 200 paginado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Respeta el tamaño de página', () => pm.expect(j.tamano).to.eql(1));",
+                  "pm.test('Devuelve como máximo 1 elemento', () => pm.expect(j.contenido.length).to.be.at.most(1));"
+                ],
+                "id": "f7d8fcca-87ac-493e-9bcf-d284d9541d12"
+              }
+            }
+          ],
+          "id": "662f9485-61e4-4487-92fd-8d2851b2a870",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=0&tamano=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G8 GET CLIENTE pagina negativa -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje claro', () => pm.expect(pm.response.json().mensaje).to.eql('La pagina debe ser 0 o mayor'));"
+                ],
+                "id": "16f49f37-29e3-446a-8e1b-dac923bc09fb"
+              }
+            }
+          ],
+          "id": "86e6ed04-4f04-469a-bb4f-8f623c33bd4b",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=-1&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "-1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G9 GET CLIENTE tamano=0 -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje claro', () => pm.expect(pm.response.json().mensaje).to.eql('El tamano de pagina debe ser 1 o mayor'));"
+                ],
+                "id": "9d20a00a-6a7d-4b74-b362-6c3b0bac04f1"
+              }
+            }
+          ],
+          "id": "17d77e47-1a22-4f0e-bc70-b1925b3f11a6",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=0&tamano=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G10 GET CLIENTE pagina fuera de rango -> 200 vacío",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Contenido vacío', () => pm.expect(j.contenido).to.be.an('array').that.is.empty);"
+                ],
+                "id": "9befc8ba-8eb7-4140-a71d-67db5a3e9f34"
+              }
+            }
+          ],
+          "id": "db343ee8-4e52-4169-bb5d-3e93b864b8ef",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=9999&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "9999"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "8803c9a6-3994-4ea9-b43b-691f4d5abc12",
+      "description": "HU-09: solo el CLIENTE lista restaurantes. Requiere tokenCliente (carpeta 0. Preparación) y varios restaurantes creados para ver el orden alfabético."
     }
   ],
   "variable": [
