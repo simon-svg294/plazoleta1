@@ -1,5 +1,6 @@
 package com.plazoletaucc.Plazoleta.service.impl;
 
+import com.plazoletaucc.Plazoleta.dto.reponse.PaginaResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PlatoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.request.HabilitarPlatoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.ModificarPlatoRequestDTO;
@@ -14,9 +15,16 @@ import com.plazoletaucc.Plazoleta.repository.PlatoRespository;
 import com.plazoletaucc.Plazoleta.repository.RestauranteRepository;
 import com.plazoletaucc.Plazoleta.service.PlatoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -83,6 +91,43 @@ public class PlatoServiceImpl implements PlatoService {
         plato.setEstado(dto.getActivo());
 
         return convertir(platoRespository.save(plato));
+    }
+
+    // HU-10: el cliente ve el menu de un restaurante, paginado y filtrable por categoria.
+    @Override
+    @Transactional(readOnly = true)
+    public PaginaResponseDTO<PlatoResponseDTO> listarPlatos(Integer idRestaurante, Integer idCategoria,
+                                                            int pagina, int tamano) {
+        // 1. La pagina y el tamano deben tener sentido
+        if (pagina < 0) {
+            throw new ReglaNegocioException("La pagina debe ser 0 o mayor");
+        }
+        if (tamano < 1) {
+            throw new ReglaNegocioException("El tamano de pagina debe ser 1 o mayor");
+        }
+
+        // 2. El restaurante del que se quiere ver el menu debe existir
+        if (!restauranteRepository.existsById(idRestaurante)) {
+            throw new ReglaNegocioException("El restaurante no existe");
+        }
+
+        // 3. Spring trae solo la pagina pedida y ya filtra los platos activos
+        Pageable pageable = PageRequest.of(pagina, tamano, Sort.by("nombre").ascending());
+        Page<Plato> resultado = (idCategoria == null)
+                ? platoRespository.findByRestaurante_IdAndEstadoTrue(idRestaurante, pageable)
+                : platoRespository.findByRestaurante_IdAndCategoria_IdAndEstadoTrue(idRestaurante, idCategoria, pageable);
+
+        List<PlatoResponseDTO> contenido = resultado.getContent().stream()
+                .map(this::convertir)
+                .toList();
+
+        return PaginaResponseDTO.<PlatoResponseDTO>builder()
+                .contenido(contenido)
+                .pagina(resultado.getNumber())
+                .tamano(resultado.getSize())
+                .totalElementos(resultado.getTotalElements())
+                .totalPaginas(resultado.getTotalPages())
+                .build();
     }
 
     // El correo viene del token (authentication.getName()). Si no es el dueño -> 403

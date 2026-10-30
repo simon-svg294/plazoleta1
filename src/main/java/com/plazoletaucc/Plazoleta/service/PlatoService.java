@@ -1,5 +1,6 @@
 package com.plazoletaucc.Plazoleta.service;
 
+import com.plazoletaucc.Plazoleta.dto.reponse.PaginaResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PlatoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.request.HabilitarPlatoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.ModificarPlatoRequestDTO;
@@ -13,4 +14,8 @@ public interface PlatoService {
 
     // HU-07: habilitar/deshabilitar plato
     PlatoResponseDTO cambiarEstadoPlato(Integer idPlato, HabilitarPlatoRequestDTO dto, String correoUsuario);
+
+    // HU-10: menu paginado de un restaurante, con filtro opcional por categoria
+    PaginaResponseDTO<PlatoResponseDTO> listarPlatos(Integer idRestaurante, Integer idCategoria,
+                                                     int pagina, int tamano);
 }

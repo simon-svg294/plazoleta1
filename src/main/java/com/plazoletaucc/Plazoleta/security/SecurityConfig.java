@@ -45,6 +45,9 @@ public class SecurityConfig {
                         // HU-09: el cliente es el unico que lista los restaurantes
                         .requestMatchers(HttpMethod.GET, "/api/v1/restaurantes")
                         .hasRole("CLIENTE")
+                        // HU-10: el cliente lista el menu de un restaurante
+                        .requestMatchers(HttpMethod.GET, "/api/v1/platos")
+                        .hasRole("CLIENTE")
                         .requestMatchers("/api/v1/platos/**")
                         .hasRole("PROPIETARIO")
                         .anyRequest()
