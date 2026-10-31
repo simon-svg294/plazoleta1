@@ -3617,6 +3617,330 @@
       ],
       "id": "1a2b3c4d-0011-4a10-9b10-0000000000ff",
       "description": "HU-10: solo el CLIENTE lista el menú de un restaurante, paginado y filtrable por categoría. Correr después de E6 (idPlato) y F (deja el plato activo)."
+    },
+    {
+      "name": "I. Realizar pedido (solo CLIENTE) - HU-11",
+      "item": [
+        {
+          "name": "I1 POST sin token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "a1111111-1111-4111-8111-111111111201"
+              }
+            }
+          ],
+          "id": "a1111111-1111-4111-8111-111111111101",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": 1,\n  \"platos\": [\n    { \"idPlato\": 1, \"cantidad\": 1 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "I2 POST con PROPIETARIO -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "a1111111-1111-4111-8111-111111111202"
+              }
+            }
+          ],
+          "id": "a1111111-1111-4111-8111-111111111102",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": {{idRestaurante}},\n  \"platos\": [\n    { \"idPlato\": {{idPlato}}, \"cantidad\": 1 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "I3 POST lista vacia -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "id": "a1111111-1111-4111-8111-111111111203"
+              }
+            }
+          ],
+          "id": "a1111111-1111-4111-8111-111111111103",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": {{idRestaurante}},\n  \"platos\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "I4 POST cantidad 0 -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "id": "a1111111-1111-4111-8111-111111111204"
+              }
+            }
+          ],
+          "id": "a1111111-1111-4111-8111-111111111104",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": {{idRestaurante}},\n  \"platos\": [\n    { \"idPlato\": {{idPlato}}, \"cantidad\": 0 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "I5 POST plato repetido -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje de plato repetido', () => pm.expect(pm.response.json().mensaje).to.eql('No se puede repetir un plato en el pedido'));"
+                ],
+                "id": "a1111111-1111-4111-8111-111111111205"
+              }
+            }
+          ],
+          "id": "a1111111-1111-4111-8111-111111111105",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": {{idRestaurante}},\n  \"platos\": [\n    { \"idPlato\": {{idPlato}}, \"cantidad\": 1 },\n    { \"idPlato\": {{idPlato}}, \"cantidad\": 2 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "I6 POST pedido valido -> 201 (guarda idPedido)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.test('Queda PENDIENTE', () => pm.expect(j.estado).to.eql('PENDIENTE'));",
+                  "pm.test('Total calculado', () => pm.expect(j.total).to.be.a('number'));",
+                  "pm.test('Guarda idPedido', () => pm.collectionVariables.set('idPedido', j.id));"
+                ],
+                "id": "a1111111-1111-4111-8111-111111111206"
+              }
+            }
+          ],
+          "id": "a1111111-1111-4111-8111-111111111106",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": {{idRestaurante}},\n  \"platos\": [\n    { \"idPlato\": {{idPlato}}, \"cantidad\": 2 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "I7 POST con pedido en proceso -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje de pedido en proceso', () => pm.expect(pm.response.json().mensaje).to.eql('Ya tienes un pedido en proceso'));"
+                ],
+                "id": "a1111111-1111-4111-8111-111111111207"
+              }
+            }
+          ],
+          "id": "a1111111-1111-4111-8111-111111111107",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": {{idRestaurante}},\n  \"platos\": [\n    { \"idPlato\": {{idPlato}}, \"cantidad\": 1 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "a1111111-1111-4111-8111-111111111111",
+      "description": "HU-11: solo el CLIENTE crea pedidos. Requiere tokenCliente, idRestaurante e idPlato (E6/F). El pedido queda PENDIENTE y solo se permite uno en proceso por cliente."
     }
   ],
   "variable": [

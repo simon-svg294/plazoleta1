@@ -50,6 +50,9 @@ public class SecurityConfig {
                         .hasRole("CLIENTE")
                         .requestMatchers("/api/v1/platos/**")
                         .hasRole("PROPIETARIO")
+                        // HU-11: el cliente crea pedidos
+                        .requestMatchers(HttpMethod.POST, "/api/v1/pedidos")
+                        .hasRole("CLIENTE")
                         .anyRequest()
                         .authenticated()
                 )
