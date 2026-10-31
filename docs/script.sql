@@ -1,4 +1,4 @@
--- Script corregido: coincide con las entidades Java (Usuario, Restaurante, Categoria, Plato).
+-- Script corregido: coincide con las entidades Java (Usuario, Restaurante, Categoria, Plato, Pedido, DetallePedido).
 -- OJO: borra y vuelve a crear plazoleta_db (solo para desarrollo).
 DROP DATABASE IF EXISTS plazoleta_db;
 CREATE DATABASE plazoleta_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -53,6 +53,32 @@ CREATE TABLE plato (
                        CONSTRAINT chk_plato_precio CHECK (precio > 0),
                        CONSTRAINT fk_plato_categoria FOREIGN KEY (id_categoria) REFERENCES categoria (id),
                        CONSTRAINT fk_plato_restaurante FOREIGN KEY (id_restaurante) REFERENCES restaurante (id)
+) ENGINE = InnoDB;
+
+CREATE TABLE pedido (
+                        id              INT NOT NULL AUTO_INCREMENT,
+                        id_cliente      INT NOT NULL,
+                        id_restaurante  INT NOT NULL,
+                        estado          ENUM('PENDIENTE','EN_PREPARACION','LISTO','ENTREGADO','CANCELADO') NOT NULL,
+                        fecha_creacion  DATETIME NOT NULL,
+                        total           INT NOT NULL,
+                        CONSTRAINT pk_pedido PRIMARY KEY (id),
+                        CONSTRAINT fk_pedido_cliente FOREIGN KEY (id_cliente) REFERENCES usuario (id),
+                        CONSTRAINT fk_pedido_restaurante FOREIGN KEY (id_restaurante) REFERENCES restaurante (id),
+                        INDEX idx_pedido_cliente_estado (id_cliente, estado)
+) ENGINE = InnoDB;
+
+CREATE TABLE detalle_pedido (
+                                id               INT NOT NULL AUTO_INCREMENT,
+                                id_pedido        INT NOT NULL,
+                                id_plato         INT NOT NULL,
+                                cantidad         INT NOT NULL,
+                                precio_unitario  INT NOT NULL,
+                                CONSTRAINT pk_detalle_pedido PRIMARY KEY (id),
+                                CONSTRAINT uq_detalle_pedido_plato UNIQUE (id_pedido, id_plato),
+                                CONSTRAINT chk_detalle_cantidad CHECK (cantidad > 0),
+                                CONSTRAINT fk_detalle_pedido FOREIGN KEY (id_pedido) REFERENCES pedido (id) ON DELETE CASCADE,
+                                CONSTRAINT fk_detalle_plato FOREIGN KEY (id_plato) REFERENCES plato (id)
 ) ENGINE = InnoDB;
 
 -- Datos iniciales
