@@ -1,16 +1,21 @@
 package com.plazoletaucc.Plazoleta.controller;
 
+import com.plazoletaucc.Plazoleta.dto.reponse.PaginaResponseDTO;
+import com.plazoletaucc.Plazoleta.dto.reponse.PedidoListadoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.request.PedidoRequestDTO;
+import com.plazoletaucc.Plazoleta.entity.EstadoPedido;
 import com.plazoletaucc.Plazoleta.service.PedidoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -26,5 +31,16 @@ public class PedidoController {
                                                          Authentication authentication) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(pedidoService.crearPedido(dto, authentication.getName()));
+    }
+
+    // HU-12: el empleado lista los pedidos de su restaurante filtrando por estado.
+    @GetMapping
+    public ResponseEntity<PaginaResponseDTO<PedidoListadoResponseDTO>> listarPedidos(
+            @RequestParam EstadoPedido estado,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "10") int tamano,
+            Authentication authentication) {
+        return ResponseEntity.ok(pedidoService.listarPedidosPorEstado(
+                estado, pagina, tamano, authentication.getName()));
     }
 }

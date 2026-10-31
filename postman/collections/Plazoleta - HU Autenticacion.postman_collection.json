@@ -1018,7 +1018,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"clave\": \"Clave123*\"\n}"
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"idRestaurante\": \"{{idRestaurante}}\",\n  \"clave\": \"Clave123*\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
@@ -1064,7 +1064,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"clave\": \"Clave123*\"\n}"
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"idRestaurante\": \"{{idRestaurante}}\",\n  \"clave\": \"Clave123*\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
@@ -1110,7 +1110,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"clave\": \"Clave123*\"\n}"
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"idRestaurante\": \"{{idRestaurante}}\",\n  \"clave\": \"Clave123*\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
@@ -1156,7 +1156,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"clave\": \"Clave123*\"\n}"
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"idRestaurante\": \"{{idRestaurante}}\",\n  \"clave\": \"Clave123*\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
@@ -1202,7 +1202,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"clave\": \"Clave123*\"\n}"
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"idRestaurante\": \"{{idRestaurante}}\",\n  \"clave\": \"Clave123*\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
@@ -1249,7 +1249,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"clave\": \"Clave123*\"\n}"
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"idRestaurante\": \"{{idRestaurante}}\",\n  \"clave\": \"Clave123*\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
@@ -3941,6 +3941,371 @@
       ],
       "id": "a1111111-1111-4111-8111-111111111111",
       "description": "HU-11: solo el CLIENTE crea pedidos. Requiere tokenCliente, idRestaurante e idPlato (E6/F). El pedido queda PENDIENTE y solo se permite uno en proceso por cliente."
+    },
+    {
+      "name": "J. Listar pedidos por estado (solo EMPLEADO) - HU-12",
+      "item": [
+        {
+          "name": "J1 GET sin token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "b2222222-2222-4222-8222-222222222201"
+              }
+            }
+          ],
+          "id": "b2222222-2222-4222-8222-222222222101",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?estado=PENDIENTE&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "PENDIENTE"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "J2 GET con CLIENTE -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "b2222222-2222-4222-8222-222222222202"
+              }
+            }
+          ],
+          "id": "b2222222-2222-4222-8222-222222222102",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?estado=PENDIENTE&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "PENDIENTE"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "J3 GET sin estado -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "id": "b2222222-2222-4222-8222-222222222203"
+              }
+            }
+          ],
+          "id": "b2222222-2222-4222-8222-222222222103",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "J4 GET estado invalido -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "id": "b2222222-2222-4222-8222-222222222204"
+              }
+            }
+          ],
+          "id": "b2222222-2222-4222-8222-222222222104",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?estado=NO_EXISTE&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "NO_EXISTE"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "J5 GET PENDIENTE -> 200 (solo del restaurante del empleado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Respuesta paginada', () => { pm.expect(j).to.have.property('contenido'); pm.expect(j).to.have.property('pagina'); pm.expect(j).to.have.property('tamano'); pm.expect(j).to.have.property('totalElementos'); pm.expect(j).to.have.property('totalPaginas'); });",
+                  "pm.test('Todos quedan PENDIENTE', () => pm.expect(j.contenido.every(p => p.estado === 'PENDIENTE')).to.be.true);",
+                  "pm.test('Solo del restaurante del empleado', () => pm.expect(j.contenido.every(p => p.idRestaurante === Number(pm.collectionVariables.get('idRestaurante')))).to.be.true);",
+                  "pm.test('Lista todos los campos del pedido', () => pm.expect(j.contenido.every(p => p.id && p.idCliente && p.nombreCliente && p.idRestaurante && p.nombreRestaurante && p.estado && p.fechaCreacion && Array.isArray(p.platos))).to.be.true);"
+                ],
+                "id": "b2222222-2222-4222-8222-222222222205"
+              }
+            }
+          ],
+          "id": "b2222222-2222-4222-8222-222222222105",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?estado=PENDIENTE&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "PENDIENTE"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "J6 GET EN_PREPARACION -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Todos quedan EN_PREPARACION', () => pm.expect(j.contenido.every(p => p.estado === 'EN_PREPARACION')).to.be.true);"
+                ],
+                "id": "b2222222-2222-4222-8222-222222222206"
+              }
+            }
+          ],
+          "id": "b2222222-2222-4222-8222-222222222106",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?estado=EN_PREPARACION&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "EN_PREPARACION"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "J7 GET paginado tamano=1 -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Respeta el tamano de pagina', () => pm.expect(j.tamano).to.eql(1));",
+                  "pm.test('Como maximo un elemento', () => pm.expect(j.contenido.length).to.be.at.most(1));"
+                ],
+                "id": "b2222222-2222-4222-8222-222222222207"
+              }
+            }
+          ],
+          "id": "b2222222-2222-4222-8222-222222222107",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?estado=PENDIENTE&pagina=0&tamano=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "PENDIENTE"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "b2222222-2222-4222-8222-222222222111",
+      "description": "HU-12: solo el EMPLEADO lista los pedidos de su restaurante. Antes de J5-J7, el tokenEmpleado debe ser de un empleado creado con idRestaurante (ejecuta C6 con tokenProp1 y haz login con ese correo) o actualiza usuario.id_restaurante por SQL. El estado es obligatorio y la respuesta es paginada."
     }
   ],
   "variable": [

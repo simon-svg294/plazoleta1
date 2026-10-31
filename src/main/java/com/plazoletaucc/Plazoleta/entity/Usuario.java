@@ -28,4 +28,9 @@ public class Usuario {
     private String clave;
     @Enumerated(EnumType.STRING)
     private Rol rol;
+
+    // HU-12: el empleado queda asociado al restaurante en el que trabaja.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_restaurante")
+    private Restaurante restaurante;
 }

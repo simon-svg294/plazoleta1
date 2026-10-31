@@ -14,6 +14,7 @@ CREATE TABLE usuario (
                          correo                 VARCHAR(100) NOT NULL,
                          clave                  VARCHAR(100) NULL,
                          rol                    ENUM('ADMINISTRADOR','CLIENTE','EMPLEADO','PROPIETARIO') NULL,
+                         id_restaurante         INT          NULL,
                          CONSTRAINT pk_usuario PRIMARY KEY (id),
                          CONSTRAINT uq_usuario_documento UNIQUE (documento_de_identidad),
                          CONSTRAINT uq_usuario_correo UNIQUE (correo)
@@ -32,6 +33,11 @@ CREATE TABLE restaurante (
                              CONSTRAINT fk_restaurante_propietario FOREIGN KEY (id_propietario) REFERENCES usuario (id),
                              INDEX idx_restaurante_nombre (nombre)
 ) ENGINE = InnoDB;
+
+-- HU-12: el empleado pertenece a un restaurante.
+ALTER TABLE usuario
+    ADD CONSTRAINT fk_usuario_restaurante
+    FOREIGN KEY (id_restaurante) REFERENCES restaurante (id);
 
 CREATE TABLE categoria (
                            id          INT          NOT NULL AUTO_INCREMENT,
@@ -65,7 +71,8 @@ CREATE TABLE pedido (
                         CONSTRAINT pk_pedido PRIMARY KEY (id),
                         CONSTRAINT fk_pedido_cliente FOREIGN KEY (id_cliente) REFERENCES usuario (id),
                         CONSTRAINT fk_pedido_restaurante FOREIGN KEY (id_restaurante) REFERENCES restaurante (id),
-                        INDEX idx_pedido_cliente_estado (id_cliente, estado)
+                        INDEX idx_pedido_cliente_estado (id_cliente, estado),
+                        INDEX idx_pedido_restaurante_estado (id_restaurante, estado)
 ) ENGINE = InnoDB;
 
 CREATE TABLE detalle_pedido (

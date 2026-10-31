@@ -27,6 +27,9 @@ public class EmpleadoRequestDTO {
     private String correo;
     @NotNull(message = "El idRol es obligatorio")
     private Integer idRol;
+    // HU-12: el empleado debe pertenecer a un restaurante.
+    @NotNull(message = "El restaurante es obligatorio")
+    private Integer idRestaurante;
     @NotBlank(message = "La clave es obligatoria")
     private String clave;
 }

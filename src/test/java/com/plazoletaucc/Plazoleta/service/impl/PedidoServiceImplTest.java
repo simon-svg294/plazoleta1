@@ -1,14 +1,18 @@
 package com.plazoletaucc.Plazoleta.service.impl;
 
+import com.plazoletaucc.Plazoleta.dto.reponse.PaginaResponseDTO;
+import com.plazoletaucc.Plazoleta.dto.reponse.PedidoListadoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.request.DetallePedidoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.PedidoRequestDTO;
+import com.plazoletaucc.Plazoleta.entity.DetallePedido;
 import com.plazoletaucc.Plazoleta.entity.EstadoPedido;
 import com.plazoletaucc.Plazoleta.entity.Pedido;
 import com.plazoletaucc.Plazoleta.entity.Plato;
 import com.plazoletaucc.Plazoleta.entity.Restaurante;
 import com.plazoletaucc.Plazoleta.entity.Rol;
 import com.plazoletaucc.Plazoleta.entity.Usuario;
+import com.plazoletaucc.Plazoleta.exception.AccesoDenegadoException;
 import com.plazoletaucc.Plazoleta.exception.ReglaNegocioException;
 import com.plazoletaucc.Plazoleta.repository.PedidoRepository;
 import com.plazoletaucc.Plazoleta.repository.PlatoRespository;
@@ -20,9 +24,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,6 +52,7 @@ import static org.mockito.Mockito.when;
 class PedidoServiceImplTest {
 
     private static final String CORREO_CLIENTE = "cliente@plazoleta.com";
+    private static final String CORREO_EMPLEADO = "empleado@plazoleta.com";
 
     @Mock
     private PedidoRepository pedidoRepository;
@@ -207,12 +216,115 @@ class PedidoServiceImplTest {
         verify(pedidoRepository, never()).save(any(Pedido.class));
     }
 
+    // ---------------- HU-12: listar pedidos filtrando por estado ----------------
+
+    @Test
+    void listarPedidosPorEstado_cuandoEmpleadoTieneRestaurante_devuelveSusPedidosPaginados() {
+        Restaurante restaurante = restaurante(10);
+        Usuario empleado = empleado(restaurante);
+        Pedido pedido = pedido(50, EstadoPedido.PENDIENTE, restaurante);
+
+        when(usuarioRepository.findByCorreo(CORREO_EMPLEADO)).thenReturn(Optional.of(empleado));
+        when(pedidoRepository.findByRestaurante_IdAndEstado(eq(10), eq(EstadoPedido.PENDIENTE), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(pedido), PageRequest.of(0, 10), 1));
+
+        PaginaResponseDTO<PedidoListadoResponseDTO> respuesta =
+                pedidoService.listarPedidosPorEstado(EstadoPedido.PENDIENTE, 0, 10, CORREO_EMPLEADO);
+
+        assertAll(
+                () -> assertEquals(1, respuesta.getContenido().size()),
+                () -> assertEquals(0, respuesta.getPagina()),
+                () -> assertEquals(10, respuesta.getTamano()),
+                () -> assertEquals(1L, respuesta.getTotalElementos()),
+                () -> assertEquals(1, respuesta.getTotalPaginas())
+        );
+
+        PedidoListadoResponseDTO dto = respuesta.getContenido().get(0);
+        assertAll(
+                () -> assertEquals(50, dto.getId()),
+                () -> assertEquals(1, dto.getIdCliente()),
+                () -> assertEquals("Cliente Prueba", dto.getNombreCliente()),
+                () -> assertEquals(10, dto.getIdRestaurante()),
+                () -> assertEquals("Restaurante 10", dto.getNombreRestaurante()),
+                () -> assertEquals(EstadoPedido.PENDIENTE, dto.getEstado()),
+                () -> assertEquals(40000, dto.getTotal()),
+                () -> assertNotNull(dto.getFechaCreacion()),
+                () -> assertEquals(1, dto.getPlatos().size()),
+                () -> assertEquals(2, dto.getPlatos().get(0).getCantidad())
+        );
+
+        verify(pedidoRepository).findByRestaurante_IdAndEstado(eq(10), eq(EstadoPedido.PENDIENTE), any(Pageable.class));
+    }
+
+    @Test
+    void listarPedidosPorEstado_cuandoEmpleadoNoTieneRestaurante_lanzaAccesoDenegado() {
+        when(usuarioRepository.findByCorreo(CORREO_EMPLEADO)).thenReturn(Optional.of(empleado(null)));
+
+        AccesoDenegadoException exception = assertThrows(AccesoDenegadoException.class,
+                () -> pedidoService.listarPedidosPorEstado(EstadoPedido.PENDIENTE, 0, 10, CORREO_EMPLEADO));
+
+        assertEquals("El empleado no tiene un restaurante asignado", exception.getMessage());
+        verifyNoInteractions(pedidoRepository);
+    }
+
+    @Test
+    void listarPedidosPorEstado_cuandoPaginaEsNegativa_lanzaReglaNegocio() {
+        ReglaNegocioException exception = assertThrows(ReglaNegocioException.class,
+                () -> pedidoService.listarPedidosPorEstado(EstadoPedido.PENDIENTE, -1, 10, CORREO_EMPLEADO));
+
+        assertEquals("La pagina debe ser 0 o mayor", exception.getMessage());
+        verifyNoInteractions(usuarioRepository, pedidoRepository);
+    }
+
+    @Test
+    void listarPedidosPorEstado_cuandoTamanoEsCero_lanzaReglaNegocio() {
+        ReglaNegocioException exception = assertThrows(ReglaNegocioException.class,
+                () -> pedidoService.listarPedidosPorEstado(EstadoPedido.PENDIENTE, 0, 0, CORREO_EMPLEADO));
+
+        assertEquals("El tamano de pagina debe ser 1 o mayor", exception.getMessage());
+        verifyNoInteractions(usuarioRepository, pedidoRepository);
+    }
+
     private Usuario cliente() {
         return Usuario.builder()
                 .id(1)
+                .nombre("Cliente")
+                .apellido("Prueba")
                 .correo(CORREO_CLIENTE)
                 .rol(Rol.CLIENTE)
                 .build();
+    }
+
+    private Usuario empleado(Restaurante restaurante) {
+        return Usuario.builder()
+                .id(2)
+                .nombre("Empleado")
+                .apellido("Prueba")
+                .correo(CORREO_EMPLEADO)
+                .rol(Rol.EMPLEADO)
+                .restaurante(restaurante)
+                .build();
+    }
+
+    private Pedido pedido(Integer id, EstadoPedido estado, Restaurante restaurante) {
+        Plato plato = plato(100, 20000, true, restaurante);
+
+        Pedido pedido = Pedido.builder()
+                .id(id)
+                .cliente(cliente())
+                .restaurante(restaurante)
+                .estado(estado)
+                .fechaCreacion(LocalDateTime.of(2026, 10, 31, 10, 15, 30))
+                .total(40000)
+                .build();
+
+        pedido.agregarDetalle(DetallePedido.builder()
+                .plato(plato)
+                .cantidad(2)
+                .precioUnitario(20000)
+                .build());
+
+        return pedido;
     }
 
     private Restaurante restaurante(Integer id) {
