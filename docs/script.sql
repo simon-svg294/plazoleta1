@@ -108,5 +108,19 @@ INSERT INTO usuario (nombre, apellido, documento_de_identidad, celular, fecha_de
 SELECT 'Empleado','Prueba','2000000002','+573002222222','1995-03-10','empleado@plazoleta.com', clave, 'EMPLEADO'
 FROM usuario WHERE correo='admin@plazoleta.com';
 
+-- HU-12: propietario y restaurante demo para que el empleado de prueba
+-- tenga un restaurante asignado y pueda listar pedidos.
+INSERT INTO usuario (nombre, apellido, documento_de_identidad, celular, fecha_de_nacimiento, correo, clave, rol)
+SELECT 'Propietario','Demo','3000000000','+573003333333','1990-01-01','propietario@plazoleta.com', clave, 'PROPIETARIO'
+FROM usuario WHERE correo='admin@plazoleta.com';
+
+INSERT INTO restaurante (nombre, nit, direccion, telefono, url_logo, id_propietario)
+SELECT 'Restaurante Demo','900000000-1','Calle 1 # 2-3','+573004444444','https://example.com/logo.png', id
+FROM usuario WHERE correo='propietario@plazoleta.com';
+
+UPDATE usuario
+SET id_restaurante = (SELECT id FROM restaurante WHERE nit = '900000000-1')
+WHERE correo = 'empleado@plazoleta.com';
+
 SELECT id, correo, rol FROM usuario;
 
