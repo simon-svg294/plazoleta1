@@ -24,6 +24,7 @@ public class PedidoListadoResponseDTO {
     private Integer idRestaurante;
     private String nombreRestaurante;
     private EstadoPedido estado;
+    private Integer idEmpleadoAsignado;
     private LocalDateTime fechaCreacion;
     private Integer total;
     private List<DetallePedidoResponseDTO> platos;

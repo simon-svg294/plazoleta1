@@ -2,6 +2,7 @@ package com.plazoletaucc.Plazoleta.controller;
 
 import com.plazoletaucc.Plazoleta.dto.reponse.PaginaResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoListadoResponseDTO;
+import com.plazoletaucc.Plazoleta.dto.reponse.PedidoListoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.request.PedidoRequestDTO;
 import com.plazoletaucc.Plazoleta.entity.EstadoPedido;
@@ -12,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,5 +45,19 @@ public class PedidoController {
             Authentication authentication) {
         return ResponseEntity.ok(pedidoService.listarPedidosPorEstado(
                 estado, pagina, tamano, authentication.getName()));
+    }
+
+    // HU-13: el empleado se asigna a un pedido de su restaurante y lo pasa a EN_PREPARACION.
+    @PatchMapping("/{idPedido}/asignar")
+    public ResponseEntity<PedidoResponseDTO> asignarPedido(@PathVariable Integer idPedido,
+                                                           Authentication authentication) {
+        return ResponseEntity.ok(pedidoService.asignarPedido(idPedido, authentication.getName()));
+    }
+
+    // HU-14: el empleado notifica que el pedido esta listo y se envia el PIN por SMS.
+    @PatchMapping("/{idPedido}/listo")
+    public ResponseEntity<PedidoListoResponseDTO> marcarPedidoListo(@PathVariable Integer idPedido,
+                                                                    Authentication authentication) {
+        return ResponseEntity.ok(pedidoService.marcarPedidoListo(idPedido, authentication.getName()));
     }
 }

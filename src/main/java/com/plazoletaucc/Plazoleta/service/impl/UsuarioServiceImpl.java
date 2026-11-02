@@ -54,6 +54,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuarioGuardado =  usuarioRepository.save(usuario);
 
         return RegistroResponseDTO.builder()
+                .id(usuarioGuardado.getId())
                 .nombre(usuario.getNombre())
                 .apellido(usuario.getApellido())
                 .correo(usuario.getCorreo())
@@ -95,6 +96,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario empleadoGuardado = usuarioRepository.save(empleado);
 
         return RegistroResponseDTO.builder()
+                .id(empleadoGuardado.getId())
                 .nombre(empleadoGuardado.getNombre())
                 .apellido(empleadoGuardado.getApellido())
                 .correo(empleadoGuardado.getCorreo())
@@ -125,6 +127,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario clienteGuardado = usuarioRepository.save(cliente);
 
         return RegistroResponseDTO.builder()
+                .id(clienteGuardado.getId())
                 .nombre(clienteGuardado.getNombre())
                 .apellido(clienteGuardado.getApellido())
                 .correo(clienteGuardado.getCorreo())

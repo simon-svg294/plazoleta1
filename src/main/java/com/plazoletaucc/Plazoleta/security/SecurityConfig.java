@@ -56,6 +56,12 @@ public class SecurityConfig {
                         // HU-12: el empleado lista los pedidos de su restaurante
                         .requestMatchers(HttpMethod.GET, "/api/v1/pedidos")
                         .hasRole("EMPLEADO")
+                        // HU-13: el empleado se asigna a un pedido y lo pasa a EN_PREPARACION
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/pedidos/*/asignar")
+                        .hasRole("EMPLEADO")
+                        // HU-14: el empleado notifica que el pedido esta listo
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/pedidos/*/listo")
+                        .hasRole("EMPLEADO")
                         .anyRequest()
                         .authenticated()
                 )
