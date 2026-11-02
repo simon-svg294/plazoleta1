@@ -2,6 +2,7 @@ package com.plazoletaucc.Plazoleta.service.impl;
 
 import com.plazoletaucc.Plazoleta.dto.reponse.PaginaResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoListadoResponseDTO;
+import com.plazoletaucc.Plazoleta.dto.reponse.PedidoListoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.request.DetallePedidoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.PedidoRequestDTO;
@@ -18,6 +19,7 @@ import com.plazoletaucc.Plazoleta.repository.PedidoRepository;
 import com.plazoletaucc.Plazoleta.repository.PlatoRespository;
 import com.plazoletaucc.Plazoleta.repository.RestauranteRepository;
 import com.plazoletaucc.Plazoleta.repository.UsuarioRepository;
+import com.plazoletaucc.Plazoleta.service.SmsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -65,6 +67,9 @@ class PedidoServiceImplTest {
 
     @Mock
     private PlatoRespository platoRespository;
+
+    @Mock
+    private SmsService smsService;
 
     @InjectMocks
     private PedidoServiceImpl pedidoService;
@@ -285,12 +290,157 @@ class PedidoServiceImplTest {
         verifyNoInteractions(usuarioRepository, pedidoRepository);
     }
 
+    // ---------------- HU-13: asignarse a un pedido ----------------
+
+    @Test
+    void asignarPedido_cuandoEstaPendienteYEsDelRestaurante_loAsignaYQuedaEnPreparacion() {
+        Restaurante restaurante = restaurante(10);
+        Usuario empleado = empleado(restaurante);
+        Pedido pedido = pedido(50, EstadoPedido.PENDIENTE, restaurante);
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_EMPLEADO)).thenReturn(Optional.of(empleado));
+        when(pedidoRepository.save(any(Pedido.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        PedidoResponseDTO response = pedidoService.asignarPedido(50, CORREO_EMPLEADO);
+
+        assertAll(
+                () -> assertEquals(50, response.getId()),
+                () -> assertEquals(EstadoPedido.EN_PREPARACION, response.getEstado()),
+                () -> assertEquals(2, response.getIdEmpleadoAsignado())
+        );
+
+        assertAll(
+                () -> assertEquals(empleado, pedido.getEmpleado()),
+                () -> assertEquals(EstadoPedido.EN_PREPARACION, pedido.getEstado())
+        );
+        verify(pedidoRepository).save(pedido);
+    }
+
+    @Test
+    void asignarPedido_cuandoEsDeOtroRestaurante_lanzaAccesoDenegado() {
+        Pedido pedido = pedido(50, EstadoPedido.PENDIENTE, restaurante(20));
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_EMPLEADO))
+                .thenReturn(Optional.of(empleado(restaurante(10))));
+
+        AccesoDenegadoException exception = assertThrows(AccesoDenegadoException.class,
+                () -> pedidoService.asignarPedido(50, CORREO_EMPLEADO));
+
+        assertEquals("El pedido no pertenece al restaurante del empleado", exception.getMessage());
+        verify(pedidoRepository, never()).save(any(Pedido.class));
+    }
+
+    @Test
+    void asignarPedido_cuandoNoEstaPendiente_lanzaReglaNegocio() {
+        Restaurante restaurante = restaurante(10);
+        Pedido pedido = pedido(50, EstadoPedido.EN_PREPARACION, restaurante);
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_EMPLEADO))
+                .thenReturn(Optional.of(empleado(restaurante)));
+
+        ReglaNegocioException exception = assertThrows(ReglaNegocioException.class,
+                () -> pedidoService.asignarPedido(50, CORREO_EMPLEADO));
+
+        assertEquals("Solo se pueden asignar pedidos en estado PENDIENTE", exception.getMessage());
+        verify(pedidoRepository, never()).save(any(Pedido.class));
+    }
+
+    @Test
+    void asignarPedido_cuandoNoExiste_lanzaNotFound() {
+        when(pedidoRepository.findById(99)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> pedidoService.asignarPedido(99, CORREO_EMPLEADO));
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("El pedido no existe", exception.getReason());
+        verifyNoInteractions(usuarioRepository);
+    }
+
+    // ---------------- HU-14: notificar pedido listo ----------------
+
+    @Test
+    void marcarPedidoListo_cuandoEstaEnPreparacion_generaPinYEnviaSms() {
+        Restaurante restaurante = restaurante(10);
+        Usuario empleado = empleado(restaurante);
+        Pedido pedido = pedido(50, EstadoPedido.EN_PREPARACION, restaurante);
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_EMPLEADO)).thenReturn(Optional.of(empleado));
+
+        PedidoListoResponseDTO response = pedidoService.marcarPedidoListo(50, CORREO_EMPLEADO);
+
+        assertAll(
+                () -> assertEquals(50, response.getId()),
+                () -> assertEquals(EstadoPedido.LISTO, response.getEstado()),
+                () -> assertNotNull(response.getPin()),
+                () -> assertEquals(4, response.getPin().length())
+        );
+
+        assertAll(
+                () -> assertEquals(EstadoPedido.LISTO, pedido.getEstado()),
+                () -> assertEquals(response.getPin(), pedido.getPin())
+        );
+
+        verify(pedidoRepository).save(pedido);
+        verify(smsService).enviarPedidoListo("+573001111111", response.getPin(), 50);
+    }
+
+    @Test
+    void marcarPedidoListo_cuandoNoEstaEnPreparacion_lanzaReglaNegocio() {
+        Restaurante restaurante = restaurante(10);
+        Pedido pedido = pedido(50, EstadoPedido.PENDIENTE, restaurante);
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_EMPLEADO))
+                .thenReturn(Optional.of(empleado(restaurante)));
+
+        ReglaNegocioException exception = assertThrows(ReglaNegocioException.class,
+                () -> pedidoService.marcarPedidoListo(50, CORREO_EMPLEADO));
+
+        assertEquals("Solo se puede marcar como LISTO un pedido en estado EN_PREPARACION",
+                exception.getMessage());
+        verify(pedidoRepository, never()).save(any(Pedido.class));
+        verifyNoInteractions(smsService);
+    }
+
+    @Test
+    void marcarPedidoListo_cuandoEsDeOtroRestaurante_lanzaAccesoDenegado() {
+        Pedido pedido = pedido(50, EstadoPedido.EN_PREPARACION, restaurante(20));
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_EMPLEADO))
+                .thenReturn(Optional.of(empleado(restaurante(10))));
+
+        AccesoDenegadoException exception = assertThrows(AccesoDenegadoException.class,
+                () -> pedidoService.marcarPedidoListo(50, CORREO_EMPLEADO));
+
+        assertEquals("El pedido no pertenece al restaurante del empleado", exception.getMessage());
+        verifyNoInteractions(smsService);
+    }
+
+    @Test
+    void marcarPedidoListo_cuandoNoExiste_lanzaNotFound() {
+        when(pedidoRepository.findById(99)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> pedidoService.marcarPedidoListo(99, CORREO_EMPLEADO));
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("El pedido no existe", exception.getReason());
+        verifyNoInteractions(smsService, usuarioRepository);
+    }
+
     private Usuario cliente() {
         return Usuario.builder()
                 .id(1)
                 .nombre("Cliente")
                 .apellido("Prueba")
                 .correo(CORREO_CLIENTE)
+                .celular("+573001111111")
                 .rol(Rol.CLIENTE)
                 .build();
     }

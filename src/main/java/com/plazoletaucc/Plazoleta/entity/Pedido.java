@@ -39,6 +39,15 @@ public class Pedido {
     @Column(nullable = false)
     private Integer total;
 
+    // HU-13: empleado que se asigna a preparar el pedido.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_empleado")
+    private Usuario empleado;
+
+    // HU-14: PIN de seguridad que se envia al cliente cuando el pedido esta listo.
+    @Column(length = 6)
+    private String pin;
+
     @Builder.Default
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetallePedido> detalles = new ArrayList<>();

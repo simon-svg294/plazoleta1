@@ -65,14 +65,18 @@ CREATE TABLE pedido (
                         id              INT NOT NULL AUTO_INCREMENT,
                         id_cliente      INT NOT NULL,
                         id_restaurante  INT NOT NULL,
+                        id_empleado     INT NULL,
                         estado          ENUM('PENDIENTE','EN_PREPARACION','LISTO','ENTREGADO','CANCELADO') NOT NULL,
                         fecha_creacion  DATETIME NOT NULL,
                         total           INT NOT NULL,
+                        pin             VARCHAR(6) NULL,
                         CONSTRAINT pk_pedido PRIMARY KEY (id),
                         CONSTRAINT fk_pedido_cliente FOREIGN KEY (id_cliente) REFERENCES usuario (id),
                         CONSTRAINT fk_pedido_restaurante FOREIGN KEY (id_restaurante) REFERENCES restaurante (id),
+                        CONSTRAINT fk_pedido_empleado FOREIGN KEY (id_empleado) REFERENCES usuario (id),
                         INDEX idx_pedido_cliente_estado (id_cliente, estado),
-                        INDEX idx_pedido_restaurante_estado (id_restaurante, estado)
+                        INDEX idx_pedido_restaurante_estado (id_restaurante, estado),
+                        INDEX idx_pedido_empleado (id_empleado)
 ) ENGINE = InnoDB;
 
 CREATE TABLE detalle_pedido (

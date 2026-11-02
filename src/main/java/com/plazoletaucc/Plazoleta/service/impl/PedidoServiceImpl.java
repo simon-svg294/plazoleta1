@@ -3,6 +3,7 @@ package com.plazoletaucc.Plazoleta.service.impl;
 import com.plazoletaucc.Plazoleta.dto.reponse.DetallePedidoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PaginaResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoListadoResponseDTO;
+import com.plazoletaucc.Plazoleta.dto.reponse.PedidoListoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.request.DetallePedidoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.PedidoRequestDTO;
@@ -19,6 +20,7 @@ import com.plazoletaucc.Plazoleta.repository.PlatoRespository;
 import com.plazoletaucc.Plazoleta.repository.RestauranteRepository;
 import com.plazoletaucc.Plazoleta.repository.UsuarioRepository;
 import com.plazoletaucc.Plazoleta.service.PedidoService;
+import com.plazoletaucc.Plazoleta.service.SmsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -45,6 +48,9 @@ public class PedidoServiceImpl implements PedidoService {
     private final UsuarioRepository usuarioRepository;
     private final RestauranteRepository restauranteRepository;
     private final PlatoRespository platoRespository;
+    private final SmsService smsService;
+
+    private final SecureRandom secureRandom = new SecureRandom();
 
     @Override
     @Transactional
@@ -115,13 +121,8 @@ public class PedidoServiceImpl implements PedidoService {
         }
 
         // 2. El empleado debe existir y tener un restaurante asignado.
-        Usuario empleado = usuarioRepository.findByCorreo(correoEmpleado)
-                .orElseThrow(() -> new AccesoDenegadoException("El empleado no existe"));
-
+        Usuario empleado = obtenerEmpleadoConRestaurante(correoEmpleado);
         Restaurante restaurante = empleado.getRestaurante();
-        if (restaurante == null) {
-            throw new AccesoDenegadoException("El empleado no tiene un restaurante asignado");
-        }
 
         // 3. Se consultan solo los pedidos del restaurante del empleado.
         Pageable pageable = PageRequest.of(pagina, tamano,
@@ -140,6 +141,81 @@ public class PedidoServiceImpl implements PedidoService {
                 .totalElementos(resultado.getTotalElements())
                 .totalPaginas(resultado.getTotalPages())
                 .build();
+    }
+
+    // HU-13: el empleado se asigna al pedido y este pasa a EN_PREPARACION.
+    @Override
+    @Transactional
+    public PedidoResponseDTO asignarPedido(Integer idPedido, String correoEmpleado) {
+        Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "El pedido no existe"));
+
+        Usuario empleado = obtenerEmpleadoConRestaurante(correoEmpleado);
+        validarPedidoDelRestaurante(pedido, empleado);
+
+        // Solo un pedido pendiente puede asignarse; ya asignado queda EN_PREPARACION.
+        if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
+            throw new ReglaNegocioException("Solo se pueden asignar pedidos en estado PENDIENTE");
+        }
+
+        pedido.setEmpleado(empleado);
+        pedido.setEstado(EstadoPedido.EN_PREPARACION);
+
+        return convertir(pedidoRepository.save(pedido));
+    }
+
+    // HU-14: el empleado notifica que el pedido esta listo y se envia el PIN por SMS.
+    @Override
+    @Transactional
+    public PedidoListoResponseDTO marcarPedidoListo(Integer idPedido, String correoEmpleado) {
+        Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "El pedido no existe"));
+
+        Usuario empleado = obtenerEmpleadoConRestaurante(correoEmpleado);
+        validarPedidoDelRestaurante(pedido, empleado);
+
+        if (pedido.getEstado() != EstadoPedido.EN_PREPARACION) {
+            throw new ReglaNegocioException(
+                    "Solo se puede marcar como LISTO un pedido en estado EN_PREPARACION");
+        }
+
+        String pin = generarPin();
+        pedido.setPin(pin);
+        pedido.setEstado(EstadoPedido.LISTO);
+        pedidoRepository.save(pedido);
+
+        // El cliente recibe el PIN en su celular para reclamar el pedido.
+        smsService.enviarPedidoListo(pedido.getCliente().getCelular(), pin, pedido.getId());
+
+        return PedidoListoResponseDTO.builder()
+                .id(pedido.getId())
+                .estado(pedido.getEstado())
+                .pin(pin)
+                .mensaje("Pedido listo. Se envio el PIN de seguridad al cliente por SMS")
+                .build();
+    }
+
+    private Usuario obtenerEmpleadoConRestaurante(String correoEmpleado) {
+        Usuario empleado = usuarioRepository.findByCorreo(correoEmpleado)
+                .orElseThrow(() -> new AccesoDenegadoException("El empleado no existe"));
+
+        if (empleado.getRestaurante() == null) {
+            throw new AccesoDenegadoException("El empleado no tiene un restaurante asignado");
+        }
+
+        return empleado;
+    }
+
+    private void validarPedidoDelRestaurante(Pedido pedido, Usuario empleado) {
+        if (!pedido.getRestaurante().getId().equals(empleado.getRestaurante().getId())) {
+            throw new AccesoDenegadoException("El pedido no pertenece al restaurante del empleado");
+        }
+    }
+
+    private String generarPin() {
+        return String.format("%04d", secureRandom.nextInt(10_000));
     }
 
     private Map<Integer, Plato> cargarYValidarPlatos(PedidoRequestDTO dto, Restaurante restaurante) {
@@ -179,6 +255,7 @@ public class PedidoServiceImpl implements PedidoService {
                 .idRestaurante(pedido.getRestaurante().getId())
                 .nombreRestaurante(pedido.getRestaurante().getNombre())
                 .estado(pedido.getEstado())
+                .idEmpleadoAsignado(pedido.getEmpleado() == null ? null : pedido.getEmpleado().getId())
                 .fechaCreacion(pedido.getFechaCreacion())
                 .total(pedido.getTotal())
                 .platos(convertirPlatos(pedido))
@@ -199,6 +276,7 @@ public class PedidoServiceImpl implements PedidoService {
                 .idRestaurante(pedido.getRestaurante().getId())
                 .nombreRestaurante(pedido.getRestaurante().getNombre())
                 .estado(pedido.getEstado())
+                .idEmpleadoAsignado(pedido.getEmpleado() == null ? null : pedido.getEmpleado().getId())
                 .fechaCreacion(pedido.getFechaCreacion())
                 .total(pedido.getTotal())
                 .platos(convertirPlatos(pedido))
