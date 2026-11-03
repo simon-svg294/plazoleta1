@@ -1,0 +1,5101 @@
+{
+  "info": {
+    "_postman_id": "86f0702e-8f77-43f6-a06a-9d84809df177",
+    "name": "Plazoleta - HU 12-13-14",
+    "description": "Pruebas de HU-12 (listar pedidos por estado), HU-13 (asignarse a un pedido) y HU-14 (notificar pedido listo). Ejecutar en orden: 0 -> A -> B -> D -> C -> E -> F -> G -> H -> I -> J -> K -> L. Requiere la app corriendo en {{baseUrl}} y MySQL disponible. La carpeta L necesita que K4 haya dejado el pedido en EN_PREPARACION.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Preparación (corre esto primero)",
+      "item": [
+        {
+          "name": "0.1 Login ADMIN (semilla de BD)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenAdmin', j.token);"
+                ],
+                "id": "e923e323-c3fc-478d-abe5-003d1166751f"
+              }
+            }
+          ],
+          "id": "b7db8446-ea68-4d28-ac19-f5525b149b83",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{adminCorreo}}\",\n  \"clave\": \"{{adminClave}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Usa el administrador del script.sql. Guarda tokenAdmin."
+          },
+          "response": []
+        },
+        {
+          "name": "0.2 Admin crea PROPIETARIO 1",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('prop1Correo', 'prop' + ts + '@test.com');",
+                  "pm.collectionVariables.set('docTmp', String(ts).slice(-10));"
+                ],
+                "id": "8135074c-9205-466d-8cd6-2be56fe5b714"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const creado = pm.response.json();",
+                  "pm.test('Devuelve el id del propietario', () => pm.expect(creado.id).to.be.a('number'));",
+                  "pm.collectionVariables.set('idPropietario', creado.id);"
+                ],
+                "id": "4dc3b4c0-8014-4d83-9bca-6f9b56056c44"
+              }
+            }
+          ],
+          "id": "4b190bce-656d-4675-82b0-6314ef787c90",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prop\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{docTmp}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1990-05-20\",\n  \"correo\": \"{{prop1Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/registro-propietario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "registro-propietario"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "0.3 Admin crea PROPIETARIO 2",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('prop2Correo', 'prop' + ts + '@test.com');",
+                  "pm.collectionVariables.set('docTmp', String(ts).slice(-10));"
+                ],
+                "id": "7a315e72-609e-41d9-b24f-a3f161d2a15d"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ],
+                "id": "a663fcab-00d7-4981-a54d-e324d6284934"
+              }
+            }
+          ],
+          "id": "40564577-ddbd-448c-a922-5fc6a725bf63",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prop\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{docTmp}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1990-05-20\",\n  \"correo\": \"{{prop2Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/registro-propietario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "registro-propietario"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "0.4 Login PROPIETARIO 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenProp1', j.token);"
+                ],
+                "id": "ce2a2060-f7ad-41d4-8ad3-3ef7c5056484"
+              }
+            }
+          ],
+          "id": "32e66573-1308-4046-96ee-32dc85026889",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{prop1Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "0.5 Login PROPIETARIO 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenProp2', j.token);"
+                ],
+                "id": "50fbb51e-5ac3-4d04-9e54-c278f3d78f5f"
+              }
+            }
+          ],
+          "id": "59d1fac9-01cb-4e6a-b052-65a5654f239c",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{prop2Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "0.6 Login CLIENTE (insertado por SQL)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenCliente', j.token);"
+                ],
+                "id": "ed74a6cb-7561-4021-9eee-10593623604d"
+              }
+            }
+          ],
+          "id": "4f04f13b-c481-4044-b6de-cbb339337e55",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{clienteCorreo}}\",\n  \"clave\": \"{{adminClave}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Requiere haber corrido 02_usuarios_de_prueba.sql"
+          },
+          "response": []
+        },
+        {
+          "name": "0.7 Login EMPLEADO (insertado por SQL)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenEmpleado', j.token);"
+                ],
+                "id": "a8e20e79-1580-4cdd-bbc0-a519db8f70cd"
+              }
+            }
+          ],
+          "id": "fd005188-9ad5-45e9-a336-b068957e9857",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{empleadoCorreo}}\",\n  \"clave\": \"{{adminClave}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Requiere haber corrido 02_usuarios_de_prueba.sql"
+          },
+          "response": []
+        },
+        {
+          "name": "0.8 Registrar CLIENTE unico (para pedidos)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('clienteNuevoCorreo', 'cli' + ts + '@test.com');",
+                  "pm.collectionVariables.set('clienteNuevoDoc', String(ts).slice(-10));"
+                ],
+                "id": "cb7311b4-7228-4bca-aa50-10673d492676"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const creado = pm.response.json();",
+                  "pm.test('Devuelve el id del cliente', () => pm.expect(creado.id).to.be.a('number'));"
+                ],
+                "id": "997748ee-86af-4a10-a42d-612de5e0125d"
+              }
+            }
+          ],
+          "id": "cff7280a-aefd-404e-a249-054024b8e4eb",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cli\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{clienteNuevoDoc}}\",\n  \"celular\": \"+573001112233\",\n  \"correo\": \"{{clienteNuevoCorreo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/cliente",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "cliente"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "0.9 Login CLIENTE unico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenCliente', j.token);"
+                ],
+                "id": "eab0deaa-82e8-41d2-90aa-af2e1786ea27"
+              }
+            }
+          ],
+          "id": "4838569e-002a-49dc-ad09-6cf82adda8e6",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{clienteNuevoCorreo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "9fd47832-f7ef-40ed-bcc3-f8d82e744171",
+      "description": "PAUSA después de esta carpeta: consulta en MySQL el id de prop1Correo y pónlo en la variable de colección idPropietario (SELECT id FROM usuario WHERE correo='...')."
+    },
+    {
+      "name": "A. Login (criterios 1-3)",
+      "item": [
+        {
+          "name": "A1 Login correcto -> 200 + token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenAdmin', j.token);"
+                ],
+                "id": "0515db52-20d6-41a0-8b59-e3ae33ae2ad3"
+              }
+            }
+          ],
+          "id": "fdf6493e-9e56-4b32-bf5e-6e07ff3cab16",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{adminCorreo}}\",\n  \"clave\": \"{{adminClave}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "A2 Clave incorrecta -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "2d2a2e02-9440-463e-a050-b87c66473501"
+              }
+            }
+          ],
+          "id": "e189c0d5-580d-4da0-beae-c166f6b4211b",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{adminCorreo}}\",\n  \"clave\": \"claveMala\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "A3 Correo inexistente -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "02a1f7a0-a477-4c43-9c6f-efd7b4d892af"
+              }
+            }
+          ],
+          "id": "ae806c68-a284-4385-9ebc-c85b4c40f13c",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"noexiste@test.com\",\n  \"clave\": \"Admin123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "A4 Correo mal formado -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "id": "62ac8493-dc6a-4325-8ab0-c1463fc0799b"
+              }
+            }
+          ],
+          "id": "fa42c601-df5e-487f-9436-5cf2dfa43b89",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"esto-no-es-correo\",\n  \"clave\": \"Admin123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "A5 Sin clave -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "id": "2b43977c-a722-4438-921e-63ac962a4596"
+              }
+            }
+          ],
+          "id": "c0331586-ee2a-429c-9274-8ae0a530761a",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{adminCorreo}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "A6 Intentos ilimitados: clave mala (repítela 10 veces en el Runner)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "ef09acc6-8349-429f-8817-47f64ab93b2b"
+              }
+            }
+          ],
+          "id": "d5bd024b-b0e3-47f2-8437-558614415abd",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{adminCorreo}}\",\n  \"clave\": \"claveMala\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "En el Runner pon Iterations=10 solo para esta request. Debe responder 401 las 10 veces (nunca 423/429 ni bloqueo)."
+          },
+          "response": []
+        },
+        {
+          "name": "A7 Tras varios fallos, login correcto sigue funcionando -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenAdmin', j.token);"
+                ],
+                "id": "09a9a731-f9bd-4af6-9f09-d22ea96fa026"
+              }
+            }
+          ],
+          "id": "4425fe28-5982-4bba-bcfa-9b5f8c3a7221",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{adminCorreo}}\",\n  \"clave\": \"{{adminClave}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "d40ddc56-1aa6-43d5-b0bd-2f6c838d43fb"
+    },
+    {
+      "name": "B. Crear propietario (solo ADMINISTRADOR)",
+      "item": [
+        {
+          "name": "B1 SIN token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "b2a6ecf3-8556-423a-a960-3eb9ae0e69f2"
+              }
+            }
+          ],
+          "id": "7fb033b2-b9ab-4455-a4dc-d7e57ce4795e",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prop\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{docTmp}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1990-05-20\",\n  \"correo\": \"{{prop1Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/registro-propietario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "registro-propietario"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "B2 token inválido -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "c7406575-5111-4204-96fb-115de9bd7089"
+              }
+            }
+          ],
+          "id": "59481dc5-c9c7-476e-bd1d-177145d8cba2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer abc.def.ghi"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prop\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{docTmp}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1990-05-20\",\n  \"correo\": \"{{prop1Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/registro-propietario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "registro-propietario"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "B3 PROPIETARIO -> 403",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('tmpCorreo', 'prop' + ts + '@test.com');",
+                  "pm.collectionVariables.set('docTmp', String(ts).slice(-10));"
+                ],
+                "id": "f8fdbe78-31ef-4a41-92d9-3cafbda0a205"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "5dd25c6b-baca-488b-a05d-eb11a87137b2"
+              }
+            }
+          ],
+          "id": "ff8d8984-3281-4fb8-aca8-b095108336a8",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prop\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{docTmp}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1990-05-20\",\n  \"correo\": \"{{prop1Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/registro-propietario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "registro-propietario"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "B4 CLIENTE -> 403",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('tmpCorreo', 'prop' + ts + '@test.com');",
+                  "pm.collectionVariables.set('docTmp', String(ts).slice(-10));"
+                ],
+                "id": "d06e31fb-b426-478b-8540-d37355fbf31b"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "18680de6-2b49-420f-84ff-f8ccb05ed268"
+              }
+            }
+          ],
+          "id": "19341dbb-5b2a-4351-b0ff-11873afb9204",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prop\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{docTmp}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1990-05-20\",\n  \"correo\": \"{{prop1Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/registro-propietario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "registro-propietario"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "B5 EMPLEADO -> 403",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('tmpCorreo', 'prop' + ts + '@test.com');",
+                  "pm.collectionVariables.set('docTmp', String(ts).slice(-10));"
+                ],
+                "id": "f94987d5-fb59-4a6e-af42-ad5296c60767"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "6db6b164-b558-4a7c-a5ba-7312752b3031"
+              }
+            }
+          ],
+          "id": "b49cbd66-9e52-4e82-b667-e15e58ea4450",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prop\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{docTmp}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1990-05-20\",\n  \"correo\": \"{{prop1Correo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/registro-propietario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "registro-propietario"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "B6 ADMINISTRADOR -> 201",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('tmpCorreo', 'prop' + ts + '@test.com');",
+                  "pm.collectionVariables.set('docTmp', String(ts).slice(-10));"
+                ],
+                "id": "8930f3d2-d1bd-4531-a48d-8bb980361baf"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ],
+                "id": "f488b573-c216-4d29-89c8-ad9071764e14"
+              }
+            }
+          ],
+          "id": "2f9a93a3-81f2-48ed-9a87-3415a4d7a8a6",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prop\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{docTmp}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1990-05-20\",\n  \"correo\": \"{{tmpCorreo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/registro-propietario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "registro-propietario"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "2e3116f1-82aa-4859-9a6a-3be793d74b1b"
+    },
+    {
+      "name": "D. Crear restaurante (solo ADMINISTRADOR)",
+      "item": [
+        {
+          "name": "D1 SIN token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "69bf5740-621c-47e6-833e-d02e2fc1b53f"
+              }
+            }
+          ],
+          "id": "85e853b3-59bf-4062-8d65-013dce49fb62",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Restaurante {{ts}}\",\n  \"nit\": \"{{nitTmp}}\",\n  \"direccion\": \"Calle 1 # 2-3\",\n  \"telefono\": \"+573009998877\",\n  \"urlLogo\": \"http://logo.com/logo.png\",\n  \"idPropietario\": \"{{idPropietario}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "D2 token inválido -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "ba04e85f-8922-41a7-8bed-7c3306bac91f"
+              }
+            }
+          ],
+          "id": "10b2130a-9631-4b48-9188-d3e885dcc9f0",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer abc.def.ghi"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Restaurante {{ts}}\",\n  \"nit\": \"{{nitTmp}}\",\n  \"direccion\": \"Calle 1 # 2-3\",\n  \"telefono\": \"+573009998877\",\n  \"urlLogo\": \"http://logo.com/logo.png\",\n  \"idPropietario\": \"{{idPropietario}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "D3 PROPIETARIO -> 403",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('ts', ts);",
+                  "pm.collectionVariables.set('nitTmp', String(ts).slice(-9));"
+                ],
+                "id": "93c94cd0-26dc-4c68-b8e3-4623b15257f5"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "9db408d8-a5cc-4422-9bd6-5f70c95af2d3"
+              }
+            }
+          ],
+          "id": "5a27be1a-0b93-4bdd-bb31-745e705ac757",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Restaurante {{ts}}\",\n  \"nit\": \"{{nitTmp}}\",\n  \"direccion\": \"Calle 1 # 2-3\",\n  \"telefono\": \"+573009998877\",\n  \"urlLogo\": \"http://logo.com/logo.png\",\n  \"idPropietario\": \"{{idPropietario}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "D4 CLIENTE -> 403",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('ts', ts);",
+                  "pm.collectionVariables.set('nitTmp', String(ts).slice(-9));"
+                ],
+                "id": "56caa8b6-968a-488e-97a2-10a4f6f9a132"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "e178328a-1797-44e9-a3cc-237f1317905e"
+              }
+            }
+          ],
+          "id": "2be8b673-8d20-4dad-b4e7-405e8cdc479e",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Restaurante {{ts}}\",\n  \"nit\": \"{{nitTmp}}\",\n  \"direccion\": \"Calle 1 # 2-3\",\n  \"telefono\": \"+573009998877\",\n  \"urlLogo\": \"http://logo.com/logo.png\",\n  \"idPropietario\": \"{{idPropietario}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "D5 EMPLEADO -> 403",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('ts', ts);",
+                  "pm.collectionVariables.set('nitTmp', String(ts).slice(-9));"
+                ],
+                "id": "ad63491e-b4a9-4081-832c-9b1c70f3ceea"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "50fc21f6-d9aa-4bfc-af1f-79a00823a7da"
+              }
+            }
+          ],
+          "id": "37dfc66f-57a3-413e-a065-ab296cf839b5",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Restaurante {{ts}}\",\n  \"nit\": \"{{nitTmp}}\",\n  \"direccion\": \"Calle 1 # 2-3\",\n  \"telefono\": \"+573009998877\",\n  \"urlLogo\": \"http://logo.com/logo.png\",\n  \"idPropietario\": \"{{idPropietario}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "D6 ADMINISTRADOR -> 201 (guarda idRestaurante)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('ts', ts);",
+                  "pm.collectionVariables.set('nitTmp', String(ts).slice(-9));"
+                ],
+                "id": "691281c6-cb1f-4249-9dc4-c47b601ff2ed"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('idRestaurante', pm.response.json().id);"
+                ],
+                "id": "f14db9bc-8246-4b95-972b-f87c3c1b8d2e"
+              }
+            }
+          ],
+          "id": "8a40bd9c-7c9b-4a6f-a9e1-34b8ea179523",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Restaurante {{ts}}\",\n  \"nit\": \"{{nitTmp}}\",\n  \"direccion\": \"Calle 1 # 2-3\",\n  \"telefono\": \"+573009998877\",\n  \"urlLogo\": \"http://logo.com/logo.png\",\n  \"idPropietario\": \"{{idPropietario}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ]
+            },
+            "description": "Requiere la variable idPropietario (id de prop1Correo en la BD)."
+          },
+          "response": []
+        }
+      ],
+      "id": "05bb9209-2052-4834-b80c-a3bae5ff140b"
+    },
+    {
+      "name": "C. Crear empleado (solo PROPIETARIO)",
+      "item": [
+        {
+          "name": "C1 SIN token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "b8487f51-2bbf-477d-9ed0-fd61421da007"
+              }
+            }
+          ],
+          "id": "28cd33e7-413f-4693-b84e-af37810d1ddf",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"idRestaurante\": \"{{idRestaurante}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "empleado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "C2 token inválido -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "c3dd8834-acc1-4934-892d-4321d84dec2d"
+              }
+            }
+          ],
+          "id": "9e35216a-e69b-4ddb-9706-40f102fdc245",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer abc.def.ghi"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"idRestaurante\": \"{{idRestaurante}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "empleado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "C3 ADMINISTRADOR -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "c73aa184-9e9b-42e0-9c85-b1f994dca190"
+              }
+            }
+          ],
+          "id": "f7786d6a-07db-4251-aaa5-9f2b31f09be4",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"idRestaurante\": \"{{idRestaurante}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "empleado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "C4 CLIENTE -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "f35242bc-93a1-4250-b2a3-59320c97d925"
+              }
+            }
+          ],
+          "id": "0f9b833e-ffca-48ff-b336-2023d17f80fc",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"idRestaurante\": \"{{idRestaurante}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "empleado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "C5 EMPLEADO -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "60b8bf82-7894-42d4-8504-9d44dac6a4b0"
+              }
+            }
+          ],
+          "id": "50f63b32-bdf5-467a-989b-1bd9387f12db",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"123456\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"emp@test.com\",\n  \"idRestaurante\": \"{{idRestaurante}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "empleado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "C6 PROPIETARIO crea EMPLEADO -> 201 (guarda empCorreo)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('empCorreo', 'emp' + ts + '@test.com');",
+                  "pm.collectionVariables.set('empDoc', String(ts).slice(-10));"
+                ],
+                "id": "a56efd50-91c9-4835-a03a-534261e01a32"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const creado = pm.response.json();",
+                  "pm.test('Devuelve el id del empleado', () => pm.expect(creado.id).to.be.a('number'));"
+                ],
+                "id": "a3b5d0b5-43fa-458d-b040-177caa8c5399"
+              }
+            }
+          ],
+          "id": "30b4e3ac-6383-4b93-b22c-dd89c3ee6e21",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Emp\",\n  \"apellido\": \"Prueba\",\n  \"documentoDeIdentidad\": \"{{empDoc}}\",\n  \"celular\": \"+573001234567\",\n  \"fechaDeNacimiento\": \"1995-01-01\",\n  \"correo\": \"{{empCorreo}}\",\n  \"idRestaurante\": \"{{idRestaurante}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/empleado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "empleado"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "9c4c9b3e-e51d-48a1-bdc5-e52084aa701b",
+      "description": "HU-12: el PROPIETARIO crea empleados solo en sus propios restaurantes. C6 crea un empleado unico en el restaurante de D6 y guarda empCorreo; J0 inicia sesion con ese empleado."
+    },
+    {
+      "name": "E. Crear/modificar plato (solo PROPIETARIO dueño)",
+      "item": [
+        {
+          "name": "E1 POST SIN token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "4389de7d-5f3e-48e0-9aff-e01724480bc0"
+              }
+            }
+          ],
+          "id": "2934c332-0629-4983-95d9-ad8bca36dd04",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bandeja paisa\",\n  \"precio\": 25000,\n  \"descripcion\": \"Plato tipico\",\n  \"urlImagen\": \"http://img.com/a.png\",\n  \"idCategoria\": 2,\n  \"idRestaurante\": \"{{idRestaurante}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "registro"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E2 POST token inválido -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "e4038c7d-cb14-4259-b804-2d03de21421f"
+              }
+            }
+          ],
+          "id": "16015ccb-375c-4345-ba2b-23e56833b9f7",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer abc.def.ghi"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bandeja paisa\",\n  \"precio\": 25000,\n  \"descripcion\": \"Plato tipico\",\n  \"urlImagen\": \"http://img.com/a.png\",\n  \"idCategoria\": 2,\n  \"idRestaurante\": \"{{idRestaurante}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "registro"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E3 ADMINISTRADOR -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "6d112d10-501e-4aeb-9dd4-4cb0b2a84b0b"
+              }
+            }
+          ],
+          "id": "62469b0b-8b5a-4d08-b022-7825d026172c",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bandeja paisa\",\n  \"precio\": 25000,\n  \"descripcion\": \"Plato tipico\",\n  \"urlImagen\": \"http://img.com/a.png\",\n  \"idCategoria\": 2,\n  \"idRestaurante\": \"{{idRestaurante}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "registro"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E4 CLIENTE -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "8bc9f9fa-aa40-4774-af45-a3db18c66b55"
+              }
+            }
+          ],
+          "id": "4cbf4da0-7804-4e2b-8577-8c17456869a8",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bandeja paisa\",\n  \"precio\": 25000,\n  \"descripcion\": \"Plato tipico\",\n  \"urlImagen\": \"http://img.com/a.png\",\n  \"idCategoria\": 2,\n  \"idRestaurante\": \"{{idRestaurante}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "registro"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E5 PROPIETARIO de OTRO restaurante -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "c655dfb7-75e6-4155-aee7-88c0104c7cfe"
+              }
+            }
+          ],
+          "id": "03d777d4-68ad-408e-a4c6-70b486405f5d",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp2}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bandeja paisa\",\n  \"precio\": 25000,\n  \"descripcion\": \"Plato tipico\",\n  \"urlImagen\": \"http://img.com/a.png\",\n  \"idCategoria\": 2,\n  \"idRestaurante\": \"{{idRestaurante}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "registro"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E6 PROPIETARIO dueño -> 201 (guarda idPlato)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const j=pm.response.json();",
+                  "pm.test('Plato nace activo', () => pm.expect(j.estado).to.eql(true));",
+                  "pm.collectionVariables.set('idPlato', j.id);"
+                ],
+                "id": "582798ed-6e9d-47e8-8941-2f8b15a16bf2"
+              }
+            }
+          ],
+          "id": "36760e27-b50c-4ebc-b36b-1b4dc08a6a9d",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bandeja paisa\",\n  \"precio\": 25000,\n  \"descripcion\": \"Plato tipico\",\n  \"urlImagen\": \"http://img.com/a.png\",\n  \"idCategoria\": 2,\n  \"idRestaurante\": \"{{idRestaurante}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "registro"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E7 PATCH SIN token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "3b2d96a4-a20f-4e0b-89d3-8aae78323d3f"
+              }
+            }
+          ],
+          "id": "90aa821c-e75c-43a9-8a16-d3fd819f2a00",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precio\": 30000,\n  \"descripcion\": \"Precio y descripcion nuevos\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E8 PATCH ADMINISTRADOR -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "7040b3be-711f-4f38-8083-72df04275b32"
+              }
+            }
+          ],
+          "id": "3f04e9b1-0257-411d-8795-2d39f437c250",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precio\": 30000,\n  \"descripcion\": \"Precio y descripcion nuevos\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E9 PATCH PROPIETARIO de otro restaurante -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "7da16acc-b346-40f6-bf41-75b7fc8a8a74"
+              }
+            }
+          ],
+          "id": "5d61b4c0-f2a9-4abd-8c01-a42dcd2bbd8d",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp2}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precio\": 30000,\n  \"descripcion\": \"Precio y descripcion nuevos\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E10 PATCH PROPIETARIO dueño -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "id": "4841f038-d47e-424a-b974-e658df276b09"
+              }
+            }
+          ],
+          "id": "c0c75b90-1680-45ea-ae6f-e442f184a82b",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precio\": 30000,\n  \"descripcion\": \"Precio y descripcion nuevos\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "84c306b4-46b5-4ecd-873d-a8f4029f3ba4"
+    },
+    {
+      "name": "F. Habilitar/Deshabilitar plato (HU-07)",
+      "item": [
+        {
+          "name": "F1 PATCH SIN token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "9b0ff51b-d601-4081-9fe1-4e5dab7f5450"
+              }
+            }
+          ],
+          "id": "93b36ab3-3ed0-4a2d-8293-5767e6feb74d",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F2 PATCH token inválido -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "a42fb26b-8e57-4abd-bfae-8839ab57b536"
+              }
+            }
+          ],
+          "id": "51aa1730-4898-4651-9949-bb185287dbc2",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer abc.def.ghi"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F3 PATCH ADMINISTRADOR -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "da3534ad-5788-491e-9f31-8b661607ad75"
+              }
+            }
+          ],
+          "id": "0869ec26-fa0d-4048-9f09-b5a89bebb6fa",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F4 PATCH CLIENTE -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "7a4cafc3-0c93-4c01-ab3e-522b2f52569c"
+              }
+            }
+          ],
+          "id": "6d18a731-27e1-4ce9-a337-2d94855c66e8",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F5 PATCH EMPLEADO -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "283a7774-739c-49e6-a1dd-0efb0c07f2cc"
+              }
+            }
+          ],
+          "id": "49a9d244-e5d7-4eeb-9351-dbcb25d71903",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6 PATCH PROPIETARIO de otro restaurante -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "dc437d50-7d89-46b9-b7e9-9e9975866adf"
+              }
+            }
+          ],
+          "id": "6f7cc93e-8c7c-40f6-be67-d399901ddd8d",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp2}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F7 Dueño DESHABILITA plato -> 200 estado false",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('El plato queda deshabilitado', () => pm.expect(pm.response.json().estado).to.eql(false));",
+                  "pm.test('No se tocan otros campos', () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('idPlato'))));"
+                ],
+                "id": "a5a7bfac-eda0-448b-ae07-7c0b65f927c5"
+              }
+            }
+          ],
+          "id": "662d4f22-0fc7-4cf6-b3e9-b2f09127b0ad",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            },
+            "description": "Requiere haber corrido E6 (guarda idPlato)."
+          },
+          "response": []
+        },
+        {
+          "name": "F8 Dueño HABILITA el plato -> 200 estado true",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('El plato vuelve a estar habilitado', () => pm.expect(pm.response.json().estado).to.eql(true));"
+                ],
+                "id": "5483b130-4949-4d3b-ad79-0fd481a615f6"
+              }
+            }
+          ],
+          "id": "7449e55f-bcc0-4311-b7a4-ffff0a002cef",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F9 Plato inexistente -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Mensaje claro', () => pm.expect(pm.response.json().mensaje).to.eql('El plato no existe'));"
+                ],
+                "id": "4cf8b9d1-54ec-4748-b9de-a3b99f8b2970"
+              }
+            }
+          ],
+          "id": "c28d25e5-4b00-4b32-88e7-e6c27abbfc1a",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/999999/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "999999",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F10 Body sin activo -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Error del campo activo', () => pm.expect(pm.response.json()).to.have.property('activo'));"
+                ],
+                "id": "8966610d-7ef6-48ab-bd8e-8fc1f6d7f0fc"
+              }
+            }
+          ],
+          "id": "f6168154-bf71-4726-9de3-cb9fac97ea98",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos/{{idPlato}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos",
+                "{{idPlato}}",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "f588081b-fc02-494b-b7f3-d276b119a02e",
+      "description": "HU-07: solo el PROPIETARIO dueño del restaurante del plato puede habilitar/deshabilitar. Correr después de E6."
+    },
+    {
+      "name": "G. Listar restaurantes (solo CLIENTE) - HU-09",
+      "item": [
+        {
+          "name": "G1 GET SIN token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "0383d418-e573-4d36-8609-38fce84eedb9"
+              }
+            }
+          ],
+          "id": "0a913f9b-1e6c-4af0-8325-b7b409e9096b",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G2 GET token inválido -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "59002b0c-ad14-4e22-bfed-5c5bd06e4616"
+              }
+            }
+          ],
+          "id": "26cc16d0-80bb-45c8-b81e-dd5c238b3091",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer abc.def.ghi"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G3 GET ADMINISTRADOR -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "51864f80-0758-4bd9-9294-e0fb9e92974b"
+              }
+            }
+          ],
+          "id": "2cb70d90-73c3-417e-a7d0-ada6dcf0a1db",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G4 GET PROPIETARIO -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "d4fd2b3e-c068-4c20-953e-901706d315df"
+              }
+            }
+          ],
+          "id": "f88b3b61-3b69-409b-bac9-8870222adb53",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G5 GET EMPLEADO -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "bd60c69b-2b43-42be-86f7-1a7f0f45d050"
+              }
+            }
+          ],
+          "id": "4a4538b3-b6a5-4abc-9c64-da43d6c313a2",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G6 GET CLIENTE -> 200 solo nombre y urlLogo, orden alfabético",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Trae los campos de paginación', () => {",
+                  "  pm.expect(j).to.have.all.keys('contenido','pagina','tamano','totalElementos','totalPaginas');",
+                  "});",
+                  "pm.test('Solo devuelve nombre y urlLogo', () => {",
+                  "  if (j.contenido.length === 0) { return; }",
+                  "  pm.expect(Object.keys(j.contenido[0]).sort()).to.eql(['nombre','urlLogo']);",
+                  "});",
+                  "pm.test('Orden alfabético por nombre', () => {",
+                  "  const nombres = j.contenido.map(r => r.nombre);",
+                  "  const ordenados = [...nombres].sort((a, b) => a.localeCompare(b, 'es'));",
+                  "  pm.expect(nombres).to.eql(ordenados);",
+                  "});"
+                ],
+                "id": "3303abf3-f4ae-435f-a675-f161d2cb074e"
+              }
+            }
+          ],
+          "id": "75a9bbb5-4d34-40f0-886e-ff2587d68f5a",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G7 GET CLIENTE tamano=1 -> 200 paginado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Respeta el tamaño de página', () => pm.expect(j.tamano).to.eql(1));",
+                  "pm.test('Devuelve como máximo 1 elemento', () => pm.expect(j.contenido.length).to.be.at.most(1));"
+                ],
+                "id": "f7d8fcca-87ac-493e-9bcf-d284d9541d12"
+              }
+            }
+          ],
+          "id": "662f9485-61e4-4487-92fd-8d2851b2a870",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=0&tamano=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G8 GET CLIENTE pagina negativa -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje claro', () => pm.expect(pm.response.json().mensaje).to.eql('La pagina debe ser 0 o mayor'));"
+                ],
+                "id": "16f49f37-29e3-446a-8e1b-dac923bc09fb"
+              }
+            }
+          ],
+          "id": "86e6ed04-4f04-469a-bb4f-8f623c33bd4b",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=-1&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "-1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G9 GET CLIENTE tamano=0 -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje claro', () => pm.expect(pm.response.json().mensaje).to.eql('El tamano de pagina debe ser 1 o mayor'));"
+                ],
+                "id": "9d20a00a-6a7d-4b74-b362-6c3b0bac04f1"
+              }
+            }
+          ],
+          "id": "17d77e47-1a22-4f0e-bc70-b1925b3f11a6",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=0&tamano=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "G10 GET CLIENTE pagina fuera de rango -> 200 vacío",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Contenido vacío', () => pm.expect(j.contenido).to.be.an('array').that.is.empty);"
+                ],
+                "id": "9befc8ba-8eb7-4140-a71d-67db5a3e9f34"
+              }
+            }
+          ],
+          "id": "db343ee8-4e52-4169-bb5d-3e93b864b8ef",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/restaurantes?pagina=9999&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "9999"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "8803c9a6-3994-4ea9-b43b-691f4d5abc12",
+      "description": "HU-09: solo el CLIENTE lista restaurantes. Requiere tokenCliente (carpeta 0. Preparación) y varios restaurantes creados para ver el orden alfabético."
+    },
+    {
+      "name": "H. Listar platos de un restaurante (solo CLIENTE) - HU-10",
+      "item": [
+        {
+          "name": "H1 GET SIN token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "1a2b3c4d-0001-4a10-9b10-000000000001"
+              }
+            }
+          ],
+          "id": "1a2b3c4d-0001-4a10-9b10-000000000002",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos?idRestaurante={{idRestaurante}}&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos"
+              ],
+              "query": [
+                {
+                  "key": "idRestaurante",
+                  "value": "{{idRestaurante}}"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "H2 GET token inválido -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "1a2b3c4d-0002-4a10-9b10-000000000001"
+              }
+            }
+          ],
+          "id": "1a2b3c4d-0002-4a10-9b10-000000000002",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer abc.def.ghi"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos?idRestaurante={{idRestaurante}}&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos"
+              ],
+              "query": [
+                {
+                  "key": "idRestaurante",
+                  "value": "{{idRestaurante}}"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "H3 GET ADMINISTRADOR -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "1a2b3c4d-0003-4a10-9b10-000000000001"
+              }
+            }
+          ],
+          "id": "1a2b3c4d-0003-4a10-9b10-000000000002",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos?idRestaurante={{idRestaurante}}&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos"
+              ],
+              "query": [
+                {
+                  "key": "idRestaurante",
+                  "value": "{{idRestaurante}}"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "H4 GET PROPIETARIO -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "1a2b3c4d-0004-4a10-9b10-000000000001"
+              }
+            }
+          ],
+          "id": "1a2b3c4d-0004-4a10-9b10-000000000002",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos?idRestaurante={{idRestaurante}}&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos"
+              ],
+              "query": [
+                {
+                  "key": "idRestaurante",
+                  "value": "{{idRestaurante}}"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "H5 GET EMPLEADO -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "1a2b3c4d-0005-4a10-9b10-000000000001"
+              }
+            }
+          ],
+          "id": "1a2b3c4d-0005-4a10-9b10-000000000002",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos?idRestaurante={{idRestaurante}}&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos"
+              ],
+              "query": [
+                {
+                  "key": "idRestaurante",
+                  "value": "{{idRestaurante}}"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "H6 GET CLIENTE -> 200 paginado y solo activos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Trae los campos de paginación', () => {",
+                  "  pm.expect(j).to.have.all.keys('contenido','pagina','tamano','totalElementos','totalPaginas');",
+                  "});",
+                  "pm.test('Todos los platos están activos', () => {",
+                  "  pm.expect(j.contenido.every(p => p.estado === true)).to.be.true;",
+                  "});",
+                  "pm.test('Solo trae platos del restaurante pedido', () => {",
+                  "  const id = Number(pm.collectionVariables.get('idRestaurante'));",
+                  "  pm.expect(j.contenido.every(p => p.idRestaurante === id)).to.be.true;",
+                  "});",
+                  "pm.test('Orden alfabético por nombre', () => {",
+                  "  const nombres = j.contenido.map(p => p.nombre);",
+                  "  const ordenados = [...nombres].sort((a, b) => a.localeCompare(b, 'es'));",
+                  "  pm.expect(nombres).to.eql(ordenados);",
+                  "});"
+                ],
+                "id": "1a2b3c4d-0006-4a10-9b10-000000000001"
+              }
+            }
+          ],
+          "id": "1a2b3c4d-0006-4a10-9b10-000000000002",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos?idRestaurante={{idRestaurante}}&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos"
+              ],
+              "query": [
+                {
+                  "key": "idRestaurante",
+                  "value": "{{idRestaurante}}"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "H7 GET CLIENTE filtro categoría=2 -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Solo trae la categoría filtrada', () => {",
+                  "  pm.expect(j.contenido.every(p => p.categoria === 'Platos fuertes')).to.be.true;",
+                  "});",
+                  "pm.test('Respeta el tamaño de página', () => pm.expect(j.tamano).to.eql(10));"
+                ],
+                "id": "1a2b3c4d-0007-4a10-9b10-000000000001"
+              }
+            }
+          ],
+          "id": "1a2b3c4d-0007-4a10-9b10-000000000002",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos?idRestaurante={{idRestaurante}}&idCategoria=2&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos"
+              ],
+              "query": [
+                {
+                  "key": "idRestaurante",
+                  "value": "{{idRestaurante}}"
+                },
+                {
+                  "key": "idCategoria",
+                  "value": "2"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "H8 GET CLIENTE tamano=1 -> 200 paginado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Respeta el tamaño de página', () => pm.expect(j.tamano).to.eql(1));",
+                  "pm.test('Devuelve como máximo 1 elemento', () => pm.expect(j.contenido.length).to.be.at.most(1));"
+                ],
+                "id": "1a2b3c4d-0008-4a10-9b10-000000000001"
+              }
+            }
+          ],
+          "id": "1a2b3c4d-0008-4a10-9b10-000000000002",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos?idRestaurante={{idRestaurante}}&pagina=0&tamano=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos"
+              ],
+              "query": [
+                {
+                  "key": "idRestaurante",
+                  "value": "{{idRestaurante}}"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "H9 GET CLIENTE pagina negativa -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje claro', () => pm.expect(pm.response.json().mensaje).to.eql('La pagina debe ser 0 o mayor'));"
+                ],
+                "id": "1a2b3c4d-0009-4a10-9b10-000000000001"
+              }
+            }
+          ],
+          "id": "1a2b3c4d-0009-4a10-9b10-000000000002",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos?idRestaurante={{idRestaurante}}&pagina=-1&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos"
+              ],
+              "query": [
+                {
+                  "key": "idRestaurante",
+                  "value": "{{idRestaurante}}"
+                },
+                {
+                  "key": "pagina",
+                  "value": "-1"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "H10 GET CLIENTE tamano=0 -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje claro', () => pm.expect(pm.response.json().mensaje).to.eql('El tamano de pagina debe ser 1 o mayor'));"
+                ],
+                "id": "1a2b3c4d-0010-4a10-9b10-000000000001"
+              }
+            }
+          ],
+          "id": "1a2b3c4d-0010-4a10-9b10-000000000002",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos?idRestaurante={{idRestaurante}}&pagina=0&tamano=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos"
+              ],
+              "query": [
+                {
+                  "key": "idRestaurante",
+                  "value": "{{idRestaurante}}"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "H11 GET restaurante inexistente -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje claro', () => pm.expect(pm.response.json().mensaje).to.eql('El restaurante no existe'));"
+                ],
+                "id": "1a2b3c4d-0011-4a10-9b10-000000000001"
+              }
+            }
+          ],
+          "id": "1a2b3c4d-0011-4a10-9b10-000000000002",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platos?idRestaurante=999999&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platos"
+              ],
+              "query": [
+                {
+                  "key": "idRestaurante",
+                  "value": "999999"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "1a2b3c4d-0011-4a10-9b10-0000000000ff",
+      "description": "HU-10: solo el CLIENTE lista el menú de un restaurante, paginado y filtrable por categoría. Correr después de E6 (idPlato) y F (deja el plato activo)."
+    },
+    {
+      "name": "I. Realizar pedido (solo CLIENTE) - HU-11",
+      "item": [
+        {
+          "name": "I1 POST sin token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "a1111111-1111-4111-8111-111111111201"
+              }
+            }
+          ],
+          "id": "a1111111-1111-4111-8111-111111111101",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": 1,\n  \"platos\": [\n    { \"idPlato\": 1, \"cantidad\": 1 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "I2 POST con PROPIETARIO -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "a1111111-1111-4111-8111-111111111202"
+              }
+            }
+          ],
+          "id": "a1111111-1111-4111-8111-111111111102",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProp1}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": {{idRestaurante}},\n  \"platos\": [\n    { \"idPlato\": {{idPlato}}, \"cantidad\": 1 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "I3 POST lista vacia -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "id": "a1111111-1111-4111-8111-111111111203"
+              }
+            }
+          ],
+          "id": "a1111111-1111-4111-8111-111111111103",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": {{idRestaurante}},\n  \"platos\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "I4 POST cantidad 0 -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "id": "a1111111-1111-4111-8111-111111111204"
+              }
+            }
+          ],
+          "id": "a1111111-1111-4111-8111-111111111104",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": {{idRestaurante}},\n  \"platos\": [\n    { \"idPlato\": {{idPlato}}, \"cantidad\": 0 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "I5 POST plato repetido -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje de plato repetido', () => pm.expect(pm.response.json().mensaje).to.eql('No se puede repetir un plato en el pedido'));"
+                ],
+                "id": "a1111111-1111-4111-8111-111111111205"
+              }
+            }
+          ],
+          "id": "a1111111-1111-4111-8111-111111111105",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": {{idRestaurante}},\n  \"platos\": [\n    { \"idPlato\": {{idPlato}}, \"cantidad\": 1 },\n    { \"idPlato\": {{idPlato}}, \"cantidad\": 2 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "I6 POST pedido valido -> 201 (guarda idPedido)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.test('Queda PENDIENTE', () => pm.expect(j.estado).to.eql('PENDIENTE'));",
+                  "pm.test('Total calculado', () => pm.expect(j.total).to.be.a('number'));",
+                  "pm.test('Guarda idPedido', () => pm.collectionVariables.set('idPedido', j.id));"
+                ],
+                "id": "a1111111-1111-4111-8111-111111111206"
+              }
+            }
+          ],
+          "id": "a1111111-1111-4111-8111-111111111106",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": {{idRestaurante}},\n  \"platos\": [\n    { \"idPlato\": {{idPlato}}, \"cantidad\": 2 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "I7 POST con pedido en proceso -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje de pedido en proceso', () => pm.expect(pm.response.json().mensaje).to.eql('Ya tienes un pedido en proceso'));"
+                ],
+                "id": "a1111111-1111-4111-8111-111111111207"
+              }
+            }
+          ],
+          "id": "a1111111-1111-4111-8111-111111111107",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": {{idRestaurante}},\n  \"platos\": [\n    { \"idPlato\": {{idPlato}}, \"cantidad\": 1 }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "a1111111-1111-4111-8111-111111111111",
+      "description": "HU-11: solo el CLIENTE crea pedidos. Requiere tokenCliente, idRestaurante e idPlato (E6/F). El pedido queda PENDIENTE y solo se permite uno en proceso por cliente."
+    },
+    {
+      "name": "J. Listar pedidos por estado (solo EMPLEADO) - HU-12",
+      "item": [
+        {
+          "name": "J0 Login EMPLEADO del restaurante (creado en C6)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenEmpleado', j.token);"
+                ],
+                "id": "f7068d51-97bb-4147-ac35-dde74236fcfd"
+              }
+            }
+          ],
+          "id": "6ec15a9c-0ade-449c-a36d-4e5885d0204f",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{empCorreo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "J1 GET sin token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "b2222222-2222-4222-8222-222222222201"
+              }
+            }
+          ],
+          "id": "b2222222-2222-4222-8222-222222222101",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?estado=PENDIENTE&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "PENDIENTE"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "J2 GET con CLIENTE -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "b2222222-2222-4222-8222-222222222202"
+              }
+            }
+          ],
+          "id": "b2222222-2222-4222-8222-222222222102",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?estado=PENDIENTE&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "PENDIENTE"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "J3 GET sin estado -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "id": "b2222222-2222-4222-8222-222222222203"
+              }
+            }
+          ],
+          "id": "b2222222-2222-4222-8222-222222222103",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "J4 GET estado invalido -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "id": "b2222222-2222-4222-8222-222222222204"
+              }
+            }
+          ],
+          "id": "b2222222-2222-4222-8222-222222222104",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?estado=NO_EXISTE&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "NO_EXISTE"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "J5 GET PENDIENTE -> 200 (solo del restaurante del empleado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Respuesta paginada', () => { pm.expect(j).to.have.property('contenido'); pm.expect(j).to.have.property('pagina'); pm.expect(j).to.have.property('tamano'); pm.expect(j).to.have.property('totalElementos'); pm.expect(j).to.have.property('totalPaginas'); });",
+                  "pm.test('Todos quedan PENDIENTE', () => pm.expect(j.contenido.every(p => p.estado === 'PENDIENTE')).to.be.true);",
+                  "pm.test('Solo del restaurante del empleado', () => pm.expect(j.contenido.every(p => p.idRestaurante === Number(pm.collectionVariables.get('idRestaurante')))).to.be.true);",
+                  "pm.test('Lista todos los campos del pedido', () => pm.expect(j.contenido.every(p => p.id && p.idCliente && p.nombreCliente && p.idRestaurante && p.nombreRestaurante && p.estado && p.fechaCreacion && Array.isArray(p.platos))).to.be.true);"
+                ],
+                "id": "b2222222-2222-4222-8222-222222222205"
+              }
+            }
+          ],
+          "id": "b2222222-2222-4222-8222-222222222105",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?estado=PENDIENTE&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "PENDIENTE"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "J6 GET EN_PREPARACION -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Todos quedan EN_PREPARACION', () => pm.expect(j.contenido.every(p => p.estado === 'EN_PREPARACION')).to.be.true);"
+                ],
+                "id": "b2222222-2222-4222-8222-222222222206"
+              }
+            }
+          ],
+          "id": "b2222222-2222-4222-8222-222222222106",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?estado=EN_PREPARACION&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "EN_PREPARACION"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "J7 GET paginado tamano=1 -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Respeta el tamano de pagina', () => pm.expect(j.tamano).to.eql(1));",
+                  "pm.test('Como maximo un elemento', () => pm.expect(j.contenido.length).to.be.at.most(1));"
+                ],
+                "id": "b2222222-2222-4222-8222-222222222207"
+              }
+            }
+          ],
+          "id": "b2222222-2222-4222-8222-222222222107",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?estado=PENDIENTE&pagina=0&tamano=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "PENDIENTE"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "b2222222-2222-4222-8222-222222222111",
+      "description": "HU-12: solo el EMPLEADO lista los pedidos de su restaurante. J0 inicia sesion con el empleado creado en C6 (mismo restaurante del pedido I6). El estado es obligatorio y la respuesta es paginada."
+    },
+    {
+      "name": "K. Asignarse a un pedido (solo EMPLEADO) - HU-13",
+      "item": [
+        {
+          "name": "K1 PATCH sin token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "c3333333-3333-4333-8333-333333333301"
+              }
+            }
+          ],
+          "id": "c3333333-3333-4333-8333-333333333101",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/asignar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "asignar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "K2 PATCH con CLIENTE -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "c3333333-3333-4333-8333-333333333302"
+              }
+            }
+          ],
+          "id": "c3333333-3333-4333-8333-333333333102",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/asignar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "asignar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "K3 PATCH pedido inexistente -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "id": "c3333333-3333-4333-8333-333333333303"
+              }
+            }
+          ],
+          "id": "c3333333-3333-4333-8333-333333333103",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/999999/asignar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "999999",
+                "asignar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "K4 PATCH pedido PENDIENTE -> 200 (EN_PREPARACION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Estado EN_PREPARACION', () => pm.expect(j.estado).to.eql('EN_PREPARACION'));",
+                  "pm.test('Empleado asignado', () => pm.expect(j.idEmpleadoAsignado).to.be.a('number'));",
+                  "pm.test('Sigue siendo el mismo pedido', () => pm.expect(j.id).to.eql(Number(pm.collectionVariables.get('idPedido'))));"
+                ],
+                "id": "c3333333-3333-4333-8333-333333333304"
+              }
+            }
+          ],
+          "id": "c3333333-3333-4333-8333-333333333104",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/asignar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "asignar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "K5 PATCH pedido ya EN_PREPARACION -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje de estado invalido', () => pm.expect(pm.response.json().mensaje).to.include('PENDIENTE'));"
+                ],
+                "id": "c3333333-3333-4333-8333-333333333305"
+              }
+            }
+          ],
+          "id": "c3333333-3333-4333-8333-333333333105",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/asignar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "asignar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "K6 GET EN_PREPARACION -> 200 (aparece el pedido)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('El pedido asignado aparece en EN_PREPARACION', () => pm.expect(j.contenido.some(p => p.id === Number(pm.collectionVariables.get('idPedido')))).to.be.true);",
+                  "pm.test('Trae el empleado asignado', () => pm.expect(j.contenido.every(p => p.idEmpleadoAsignado === null || typeof p.idEmpleadoAsignado === 'number')).to.be.true);"
+                ],
+                "id": "c3333333-3333-4333-8333-333333333306"
+              }
+            }
+          ],
+          "id": "c3333333-3333-4333-8333-333333333106",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?estado=EN_PREPARACION&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "EN_PREPARACION"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "c3333333-3333-4333-8333-333333333111",
+      "description": "HU-13: solo el EMPLEADO se asigna a pedidos de su restaurante. Requiere idPedido (I6) y tokenEmpleado. Un pedido PENDIENTE pasa a EN_PREPARACION y guarda idEmpleadoAsignado. Un empleado puede tener varios pedidos asignados."
+    },
+    {
+      "name": "L. Notificar pedido listo (solo EMPLEADO) - HU-14",
+      "item": [
+        {
+          "name": "L1 PATCH sin token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "d4444444-4444-4444-8444-444444444401"
+              }
+            }
+          ],
+          "id": "d4444444-4444-4444-8444-444444444101",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/listo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "listo"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "L2 PATCH con CLIENTE -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "d4444444-4444-4444-8444-444444444402"
+              }
+            }
+          ],
+          "id": "d4444444-4444-4444-8444-444444444102",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/listo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "listo"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "L3 PATCH pedido inexistente -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "id": "d4444444-4444-4444-8444-444444444403"
+              }
+            }
+          ],
+          "id": "d4444444-4444-4444-8444-444444444103",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/999999/listo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "999999",
+                "listo"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "L4 PATCH pedido EN_PREPARACION -> 200 (LISTO + PIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Estado LISTO', () => pm.expect(j.estado).to.eql('LISTO'));",
+                  "pm.test('PIN de 4 digitos', () => pm.expect(j.pin).to.match(/^\\d{4}$/));",
+                  "pm.test('Guarda el PIN', () => pm.collectionVariables.set('pinPedido', j.pin));"
+                ],
+                "id": "d4444444-4444-4444-8444-444444444404"
+              }
+            }
+          ],
+          "id": "d4444444-4444-4444-8444-444444444104",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/listo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "listo"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "L5 PATCH pedido ya LISTO -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje de estado invalido', () => pm.expect(pm.response.json().mensaje).to.include('EN_PREPARACION'));"
+                ],
+                "id": "d4444444-4444-4444-8444-444444444405"
+              }
+            }
+          ],
+          "id": "d4444444-4444-4444-8444-444444444105",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/listo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "listo"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "L6 GET LISTO -> 200 (aparece el pedido)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('El pedido aparece en LISTO', () => pm.expect(j.contenido.some(p => p.id === Number(pm.collectionVariables.get('idPedido')))).to.be.true);"
+                ],
+                "id": "d4444444-4444-4444-8444-444444444406"
+              }
+            }
+          ],
+          "id": "d4444444-4444-4444-8444-444444444106",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?estado=LISTO&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "LISTO"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "d4444444-4444-4444-8444-444444444111",
+      "description": "HU-14: solo el EMPLEADO notifica que un pedido EN_PREPARACION esta listo. Se genera un PIN de 4 digitos, se guarda en el pedido y se envia por SMS al celular del cliente (en esta version el SMS se registra en el log). Requiere ejecutar K4 antes para dejar el pedido EN_PREPARACION."
+    }
+  ],
+  "variable": [
+    {
+      "id": "9d563746-b0eb-4350-943a-1aadb0831e4d",
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "id": "b801fcad-8cc2-4225-9f28-1c0f8c19ebc6",
+      "key": "adminCorreo",
+      "value": "admin@plazoleta.com"
+    },
+    {
+      "id": "a664f0d2-fc30-4308-bb25-0e448fb84138",
+      "key": "adminClave",
+      "value": "Admin123*"
+    },
+    {
+      "id": "2f1d2e49-bb0d-455d-90e5-64e991e75dc3",
+      "key": "clienteCorreo",
+      "value": "cliente@plazoleta.com"
+    },
+    {
+      "id": "f52076f1-9b23-4481-ab79-a477ae28a64e",
+      "key": "empleadoCorreo",
+      "value": "empleado@plazoleta.com"
+    },
+    {
+      "id": "121bc334-61bf-4213-aa54-9973f63607ec",
+      "key": "idPropietario",
+      "value": ""
+    },
+    {
+      "id": "26afec3f-8d36-4678-9f60-5bb1fd7d6d99",
+      "key": "idRestaurante",
+      "value": ""
+    },
+    {
+      "id": "49aae31a-678f-4590-8d3f-bc1d9d6c07b1",
+      "key": "idPlato",
+      "value": ""
+    },
+    {
+      "id": "04f532d1-6720-4b84-b0e3-9018dff85d82",
+      "key": "tokenAdmin",
+      "value": ""
+    },
+    {
+      "id": "e444af71-8951-452b-ba14-a87bad677ca1",
+      "key": "prop1Correo",
+      "value": ""
+    },
+    {
+      "id": "145709fe-6e0a-426d-998f-ed2c3ee113f9",
+      "key": "docTmp",
+      "value": ""
+    },
+    {
+      "id": "b15f5b8c-da0d-432c-88d5-c5d177886be7",
+      "key": "prop2Correo",
+      "value": ""
+    },
+    {
+      "id": "840e81e9-617b-4aff-850a-e078666adf71",
+      "key": "tokenProp1",
+      "value": ""
+    },
+    {
+      "id": "68746b02-ab84-47e5-8715-2900dbd1b8e9",
+      "key": "tokenProp2",
+      "value": ""
+    },
+    {
+      "id": "1e445d5b-60df-4330-a228-6fe24438f4f4",
+      "key": "tokenCliente",
+      "value": ""
+    },
+    {
+      "id": "770f0795-e5d5-42d6-9103-737f56337680",
+      "key": "tokenEmpleado",
+      "value": ""
+    },
+    {
+      "id": "742983c9-178d-45c6-826f-43fbfed35420",
+      "key": "tmpCorreo",
+      "value": ""
+    },
+    {
+      "id": "0c4b9e60-56e5-43c2-8fee-9669a89159e7",
+      "key": "ts",
+      "value": ""
+    },
+    {
+      "id": "de13a710-e278-4cf4-9e0a-e0e567b2bc30",
+      "key": "nitTmp",
+      "value": ""
+    },
+    {
+      "id": "ae0a89ad-05c5-4830-9648-daf531942673",
+      "key": "empCorreo",
+      "value": ""
+    },
+    {
+      "id": "bf4af9ce-6cac-457a-a707-0f3ad47a3898",
+      "key": "empDoc",
+      "value": ""
+    },
+    {
+      "id": "3f7df6b0-5e7f-49ad-8e00-99f9869300fa",
+      "key": "clienteNuevoCorreo",
+      "value": ""
+    },
+    {
+      "id": "c9d1b653-5e09-41d3-843c-b987f80e6095",
+      "key": "clienteNuevoDoc",
+      "value": ""
+    }
+  ]
+}

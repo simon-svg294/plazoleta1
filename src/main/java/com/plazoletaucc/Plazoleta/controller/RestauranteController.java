@@ -5,6 +5,9 @@ import com.plazoletaucc.Plazoleta.dto.reponse.RestauranteListadoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.RestauranteResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.request.RestauranteRequestDTO;
 import com.plazoletaucc.Plazoleta.service.RestauranteService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,10 +22,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/restaurantes")
 @RequiredArgsConstructor
+@Tag(name = "Restaurantes", description = "Gestion de restaurantes")
 public class RestauranteController {
 
     private final RestauranteService restauranteService;
 
+    @Operation(summary = "Crear restaurante", description = "HU-02: el administrador crea un restaurante.")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     public ResponseEntity<RestauranteResponseDTO> crearRestaurante(@Valid @RequestBody RestauranteRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -30,6 +36,7 @@ public class RestauranteController {
     }
 
     // HU-09: el cliente lista los restaurantes disponibles (alfabetico y paginado).
+    @Operation(summary = "Listar restaurantes", description = "HU-09: el cliente lista los restaurantes disponibles, alfabetico y paginado.")
     @GetMapping
     public ResponseEntity<PaginaResponseDTO<RestauranteListadoResponseDTO>> listarRestaurantes(
             @RequestParam(defaultValue = "0") int pagina,

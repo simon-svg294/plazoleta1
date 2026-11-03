@@ -4979,6 +4979,498 @@
       ],
       "id": "d4444444-4444-4444-8444-444444444111",
       "description": "HU-14: solo el EMPLEADO notifica que un pedido EN_PREPARACION esta listo. Se genera un PIN de 4 digitos, se guarda en el pedido y se envia por SMS al celular del cliente (en esta version el SMS se registra en el log). Requiere ejecutar K4 antes para dejar el pedido EN_PREPARACION."
+    },
+    {
+      "name": "M. Entregar pedido (solo EMPLEADO) - HU-15",
+      "item": [
+        {
+          "name": "M1 PATCH sin token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "e5555555-5555-4555-8555-555555555501"
+              }
+            }
+          ],
+          "id": "e5555555-5555-4555-8555-555555555101",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pin\": \"{{pinPedido}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/entregar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "entregar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "M2 PATCH con CLIENTE -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "e5555555-5555-4555-8555-555555555502"
+              }
+            }
+          ],
+          "id": "e5555555-5555-4555-8555-555555555102",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pin\": \"{{pinPedido}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/entregar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "entregar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "M3 PATCH pedido inexistente -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ],
+                "id": "e5555555-5555-4555-8555-555555555503"
+              }
+            }
+          ],
+          "id": "e5555555-5555-4555-8555-555555555103",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pin\": \"1234\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/999999/entregar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "999999",
+                "entregar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "M4 PATCH sin PIN -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "id": "e5555555-5555-4555-8555-555555555504"
+              }
+            }
+          ],
+          "id": "e5555555-5555-4555-8555-555555555104",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/entregar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "entregar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "M5 PATCH PIN incorrecto -> 400",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const real = pm.collectionVariables.get('pinPedido');",
+                  "pm.collectionVariables.set('pinIncorrecto', real === '0000' ? '1111' : '0000');"
+                ],
+                "id": "e5555555-5555-4555-8555-555555555515"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje de PIN incorrecto', () => pm.expect(pm.response.json().mensaje).to.include('PIN'));"
+                ],
+                "id": "e5555555-5555-4555-8555-555555555505"
+              }
+            }
+          ],
+          "id": "e5555555-5555-4555-8555-555555555105",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pin\": \"{{pinIncorrecto}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/entregar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "entregar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "M6 PATCH PIN correcto -> 200 (ENTREGADO)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Estado ENTREGADO', () => pm.expect(j.estado).to.eql('ENTREGADO'));",
+                  "pm.test('Sigue siendo el mismo pedido', () => pm.expect(j.id).to.eql(Number(pm.collectionVariables.get('idPedido'))));"
+                ],
+                "id": "e5555555-5555-4555-8555-555555555506"
+              }
+            }
+          ],
+          "id": "e5555555-5555-4555-8555-555555555106",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pin\": \"{{pinPedido}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/entregar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "entregar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "M7 PATCH pedido ya ENTREGADO -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensaje de pedido ya entregado', () => pm.expect(pm.response.json().mensaje).to.include('ENTREGADO'));"
+                ],
+                "id": "e5555555-5555-4555-8555-555555555507"
+              }
+            }
+          ],
+          "id": "e5555555-5555-4555-8555-555555555107",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pin\": \"{{pinPedido}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/entregar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "entregar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "M8 GET ENTREGADO -> 200 (aparece el pedido)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('El pedido aparece en ENTREGADO', () => pm.expect(j.contenido.some(p => p.id === Number(pm.collectionVariables.get('idPedido')))).to.be.true);",
+                  "pm.test('Todos los pedidos estan ENTREGADO', () => pm.expect(j.contenido.every(p => p.estado === 'ENTREGADO')).to.be.true);"
+                ],
+                "id": "e5555555-5555-4555-8555-555555555508"
+              }
+            }
+          ],
+          "id": "e5555555-5555-4555-8555-555555555108",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos?estado=ENTREGADO&pagina=0&tamano=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "ENTREGADO"
+                },
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamano",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "M9 PATCH listo sobre ENTREGADO -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "id": "e5555555-5555-4555-8555-555555555509"
+              }
+            }
+          ],
+          "id": "e5555555-5555-4555-8555-555555555109",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/listo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "listo"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "M10 PATCH asignar sobre ENTREGADO -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ],
+                "id": "e5555555-5555-4555-8555-555555555510"
+              }
+            }
+          ],
+          "id": "e5555555-5555-4555-8555-555555555110",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/asignar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "asignar"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "e5555555-5555-4555-8555-555555555100",
+      "description": "HU-15: solo el EMPLEADO entrega un pedido LISTO digitando el PIN enviado al cliente. Un pedido ENTREGADO no puede reentregarse ni volver a EN_PREPARACION. Requiere ejecutar L4 antes para dejar pinPedido."
     }
   ],
   "variable": [
@@ -5100,6 +5592,11 @@
     {
       "id": "c9d1b653-5e09-41d3-843c-b987f80e6095",
       "key": "clienteNuevoDoc",
+      "value": ""
+    },
+    {
+      "id": "e5555555-5555-4555-8555-555555555500",
+      "key": "pinIncorrecto",
       "value": ""
     }
   ]
