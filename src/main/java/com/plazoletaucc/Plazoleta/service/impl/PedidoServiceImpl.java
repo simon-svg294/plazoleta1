@@ -197,6 +197,37 @@ public class PedidoServiceImpl implements PedidoService {
                 .build();
     }
 
+    // HU-15: el empleado entrega el pedido solo si esta LISTO y digita el PIN correcto.
+    @Override
+    @Transactional
+    public PedidoResponseDTO entregarPedido(Integer idPedido, String pin, String correoEmpleado) {
+        Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "El pedido no existe"));
+
+        Usuario empleado = obtenerEmpleadoConRestaurante(correoEmpleado);
+        validarPedidoDelRestaurante(pedido, empleado);
+
+        // HU-15: un pedido ENTREGADO no puede modificarse a otro estado ni reentregarse.
+        if (pedido.getEstado() == EstadoPedido.ENTREGADO) {
+            throw new ReglaNegocioException("El pedido ya esta ENTREGADO");
+        }
+
+        // Solo un pedido LISTO puede pasar a ENTREGADO.
+        if (pedido.getEstado() != EstadoPedido.LISTO) {
+            throw new ReglaNegocioException("Solo se puede entregar un pedido en estado LISTO");
+        }
+
+        // El PIN debe coincidir con el que se envio al cliente cuando el pedido quedo LISTO.
+        if (pedido.getPin() == null || pin == null || !pedido.getPin().equals(pin)) {
+            throw new ReglaNegocioException("El PIN de seguridad no es correcto");
+        }
+
+        pedido.setEstado(EstadoPedido.ENTREGADO);
+
+        return convertir(pedidoRepository.save(pedido));
+    }
+
     private Usuario obtenerEmpleadoConRestaurante(String correoEmpleado) {
         Usuario empleado = usuarioRepository.findByCorreo(correoEmpleado)
                 .orElseThrow(() -> new AccesoDenegadoException("El empleado no existe"));

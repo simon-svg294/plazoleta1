@@ -6,6 +6,9 @@ import com.plazoletaucc.Plazoleta.dto.request.HabilitarPlatoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.ModificarPlatoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.PlatoRequestDTO;
 import com.plazoletaucc.Plazoleta.service.PlatoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,10 +26,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/platos")
 @RequiredArgsConstructor
+@Tag(name = "Platos", description = "Gestion de platos: listado, creacion, modificacion y estado")
 public class PlatoController {
     private final PlatoService platoService;
 
     // HU-10: el cliente lista el menu de un restaurante, paginado y filtrable por categoria.
+    @Operation(summary = "Listar platos", description = "HU-10: el cliente lista el menu de un restaurante, paginado y filtrable por categoria.")
     @GetMapping
     public ResponseEntity<PaginaResponseDTO<PlatoResponseDTO>> listarPlatos(
             @RequestParam Integer idRestaurante,
@@ -36,6 +41,8 @@ public class PlatoController {
         return ResponseEntity.ok(platoService.listarPlatos(idRestaurante, idCategoria, pagina, tamano));
     }
 
+    @Operation(summary = "Registrar plato", description = "HU-03: el propietario registra un plato en su restaurante.")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/registro")
     public ResponseEntity<PlatoResponseDTO> registrarPlato(@Valid @RequestBody PlatoRequestDTO platoRequestDTO,
                                                            Authentication authentication) {
@@ -45,6 +52,8 @@ public class PlatoController {
     }
 
     // HU-04: modificar precio y descripcion. PATCH = cambio parcial.
+    @Operation(summary = "Modificar plato", description = "HU-04: el propietario modifica precio y descripcion de un plato.")
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{idPlato}")
     public ResponseEntity<PlatoResponseDTO> modificarPlato(@PathVariable Integer idPlato,
                                                            @Valid @RequestBody ModificarPlatoRequestDTO dto,
@@ -53,6 +62,8 @@ public class PlatoController {
     }
 
     // HU-07: habilitar/deshabilitar un plato del restaurante propio.
+    @Operation(summary = "Cambiar estado del plato", description = "HU-07: el propietario habilita o deshabilita un plato de su restaurante.")
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{idPlato}/estado")
     public ResponseEntity<PlatoResponseDTO> cambiarEstadoPlato(@PathVariable Integer idPlato,
                                                                @Valid @RequestBody HabilitarPlatoRequestDTO dto,

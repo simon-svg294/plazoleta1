@@ -32,7 +32,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth-> auth
                         .requestMatchers(
                                 "/api/v1/auth/login",
-                                "/error"
+                                "/error",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
                         ).permitAll()
                         // HU-08: registro de cliente libre
                         .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/cliente").permitAll()
@@ -61,6 +64,9 @@ public class SecurityConfig {
                         .hasRole("EMPLEADO")
                         // HU-14: el empleado notifica que el pedido esta listo
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/pedidos/*/listo")
+                        .hasRole("EMPLEADO")
+                        // HU-15: el empleado entrega el pedido con el PIN del cliente
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/pedidos/*/entregar")
                         .hasRole("EMPLEADO")
                         .anyRequest()
                         .authenticated()

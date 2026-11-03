@@ -434,6 +434,130 @@ class PedidoServiceImplTest {
         verifyNoInteractions(smsService, usuarioRepository);
     }
 
+    // ---------------- HU-15: entregar pedido con PIN ----------------
+
+    @Test
+    void entregarPedido_cuandoEstaListoYElPinEsCorrecto_quedaEntregado() {
+        Restaurante restaurante = restaurante(10);
+        Usuario empleado = empleado(restaurante);
+        Pedido pedido = pedido(50, EstadoPedido.LISTO, restaurante);
+        pedido.setPin("1234");
+        pedido.setEmpleado(empleado);
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_EMPLEADO)).thenReturn(Optional.of(empleado));
+        when(pedidoRepository.save(any(Pedido.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        PedidoResponseDTO response = pedidoService.entregarPedido(50, "1234", CORREO_EMPLEADO);
+
+        assertAll(
+                () -> assertEquals(50, response.getId()),
+                () -> assertEquals(EstadoPedido.ENTREGADO, response.getEstado()),
+                () -> assertEquals(2, response.getIdEmpleadoAsignado())
+        );
+        assertEquals(EstadoPedido.ENTREGADO, pedido.getEstado());
+        verify(pedidoRepository).save(pedido);
+    }
+
+    @Test
+    void entregarPedido_cuandoElPinEsIncorrecto_lanzaReglaNegocio() {
+        Restaurante restaurante = restaurante(10);
+        Pedido pedido = pedido(50, EstadoPedido.LISTO, restaurante);
+        pedido.setPin("1234");
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_EMPLEADO))
+                .thenReturn(Optional.of(empleado(restaurante)));
+
+        ReglaNegocioException exception = assertThrows(ReglaNegocioException.class,
+                () -> pedidoService.entregarPedido(50, "0000", CORREO_EMPLEADO));
+
+        assertEquals("El PIN de seguridad no es correcto", exception.getMessage());
+        assertEquals(EstadoPedido.LISTO, pedido.getEstado());
+        verify(pedidoRepository, never()).save(any(Pedido.class));
+    }
+
+    @Test
+    void entregarPedido_cuandoElPinEsNulo_lanzaReglaNegocio() {
+        Restaurante restaurante = restaurante(10);
+        Pedido pedido = pedido(50, EstadoPedido.LISTO, restaurante);
+        pedido.setPin("1234");
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_EMPLEADO))
+                .thenReturn(Optional.of(empleado(restaurante)));
+
+        ReglaNegocioException exception = assertThrows(ReglaNegocioException.class,
+                () -> pedidoService.entregarPedido(50, null, CORREO_EMPLEADO));
+
+        assertEquals("El PIN de seguridad no es correcto", exception.getMessage());
+        verify(pedidoRepository, never()).save(any(Pedido.class));
+    }
+
+    @Test
+    void entregarPedido_cuandoNoEstaListo_lanzaReglaNegocio() {
+        Restaurante restaurante = restaurante(10);
+        Pedido pedido = pedido(50, EstadoPedido.EN_PREPARACION, restaurante);
+        pedido.setPin("1234");
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_EMPLEADO))
+                .thenReturn(Optional.of(empleado(restaurante)));
+
+        ReglaNegocioException exception = assertThrows(ReglaNegocioException.class,
+                () -> pedidoService.entregarPedido(50, "1234", CORREO_EMPLEADO));
+
+        assertEquals("Solo se puede entregar un pedido en estado LISTO", exception.getMessage());
+        assertEquals(EstadoPedido.EN_PREPARACION, pedido.getEstado());
+        verify(pedidoRepository, never()).save(any(Pedido.class));
+    }
+
+    @Test
+    void entregarPedido_cuandoYaEstaEntregado_lanzaReglaNegocio() {
+        Restaurante restaurante = restaurante(10);
+        Pedido pedido = pedido(50, EstadoPedido.ENTREGADO, restaurante);
+        pedido.setPin("1234");
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_EMPLEADO))
+                .thenReturn(Optional.of(empleado(restaurante)));
+
+        ReglaNegocioException exception = assertThrows(ReglaNegocioException.class,
+                () -> pedidoService.entregarPedido(50, "1234", CORREO_EMPLEADO));
+
+        assertEquals("El pedido ya esta ENTREGADO", exception.getMessage());
+        verify(pedidoRepository, never()).save(any(Pedido.class));
+    }
+
+    @Test
+    void entregarPedido_cuandoEsDeOtroRestaurante_lanzaAccesoDenegado() {
+        Pedido pedido = pedido(50, EstadoPedido.LISTO, restaurante(20));
+        pedido.setPin("1234");
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_EMPLEADO))
+                .thenReturn(Optional.of(empleado(restaurante(10))));
+
+        AccesoDenegadoException exception = assertThrows(AccesoDenegadoException.class,
+                () -> pedidoService.entregarPedido(50, "1234", CORREO_EMPLEADO));
+
+        assertEquals("El pedido no pertenece al restaurante del empleado", exception.getMessage());
+        verify(pedidoRepository, never()).save(any(Pedido.class));
+    }
+
+    @Test
+    void entregarPedido_cuandoNoExiste_lanzaNotFound() {
+        when(pedidoRepository.findById(99)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> pedidoService.entregarPedido(99, "1234", CORREO_EMPLEADO));
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("El pedido no existe", exception.getReason());
+        verifyNoInteractions(usuarioRepository);
+    }
+
     private Usuario cliente() {
         return Usuario.builder()
                 .id(1)
