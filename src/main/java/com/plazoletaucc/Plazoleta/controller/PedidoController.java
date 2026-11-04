@@ -81,4 +81,12 @@ public class PedidoController {
         return ResponseEntity.ok(pedidoService.entregarPedido(
                 idPedido, dto.getPin(), authentication.getName()));
     }
+
+    // HU-16: el cliente cancela su pedido solo si esta PENDIENTE.
+    @Operation(summary = "Cancelar pedido", description = "HU-16: el cliente cancela su pedido solo si esta PENDIENTE.")
+    @PatchMapping("/{idPedido}/cancelar")
+    public ResponseEntity<PedidoResponseDTO> cancelarPedido(@PathVariable Integer idPedido,
+                                                            Authentication authentication) {
+        return ResponseEntity.ok(pedidoService.cancelarPedido(idPedido, authentication.getName()));
+    }
 }

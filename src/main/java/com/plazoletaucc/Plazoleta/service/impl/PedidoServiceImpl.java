@@ -228,6 +228,33 @@ public class PedidoServiceImpl implements PedidoService {
         return convertir(pedidoRepository.save(pedido));
     }
 
+    // HU-16: el cliente cancela su pedido solo si esta PENDIENTE.
+    @Override
+    @Transactional
+    public PedidoResponseDTO cancelarPedido(Integer idPedido, String correoCliente) {
+        Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "El pedido no existe"));
+
+        Usuario cliente = usuarioRepository.findByCorreo(correoCliente)
+                .orElseThrow(() -> new AccesoDenegadoException("El cliente no existe"));
+
+        // El cliente solo puede cancelar sus propios pedidos.
+        if (!pedido.getCliente().getId().equals(cliente.getId())) {
+            throw new AccesoDenegadoException("El pedido no pertenece al cliente");
+        }
+
+        // HU-16: cualquier estado distinto de PENDIENTE impide la cancelacion.
+        if (pedido.getEstado() != EstadoPedido.PENDIENTE) {
+            throw new ReglaNegocioException(
+                    "Lo sentimos, tu pedido ya está en preparación y no puede cancelarse");
+        }
+
+        pedido.setEstado(EstadoPedido.CANCELADO);
+
+        return convertir(pedidoRepository.save(pedido));
+    }
+
     private Usuario obtenerEmpleadoConRestaurante(String correoEmpleado) {
         Usuario empleado = usuarioRepository.findByCorreo(correoEmpleado)
                 .orElseThrow(() -> new AccesoDenegadoException("El empleado no existe"));

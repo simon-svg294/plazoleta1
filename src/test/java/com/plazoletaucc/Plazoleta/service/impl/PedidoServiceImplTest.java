@@ -558,6 +558,94 @@ class PedidoServiceImplTest {
         verifyNoInteractions(usuarioRepository);
     }
 
+    // ---------------- HU-16: cancelar pedido ----------------
+
+    @Test
+    void cancelarPedido_cuandoEstaPendienteYEsDelCliente_quedaCancelado() {
+        Restaurante restaurante = restaurante(10);
+        Pedido pedido = pedido(50, EstadoPedido.PENDIENTE, restaurante);
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_CLIENTE)).thenReturn(Optional.of(cliente()));
+        when(pedidoRepository.save(any(Pedido.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        PedidoResponseDTO response = pedidoService.cancelarPedido(50, CORREO_CLIENTE);
+
+        assertAll(
+                () -> assertEquals(50, response.getId()),
+                () -> assertEquals(EstadoPedido.CANCELADO, response.getEstado()),
+                () -> assertEquals(EstadoPedido.CANCELADO, pedido.getEstado())
+        );
+        verify(pedidoRepository).save(pedido);
+    }
+
+    @Test
+    void cancelarPedido_cuandoNoEstaPendiente_lanzaReglaNegocioConMensajeDeLaHu() {
+        Restaurante restaurante = restaurante(10);
+        Pedido pedido = pedido(50, EstadoPedido.EN_PREPARACION, restaurante);
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_CLIENTE)).thenReturn(Optional.of(cliente()));
+
+        ReglaNegocioException exception = assertThrows(ReglaNegocioException.class,
+                () -> pedidoService.cancelarPedido(50, CORREO_CLIENTE));
+
+        assertEquals("Lo sentimos, tu pedido ya está en preparación y no puede cancelarse",
+                exception.getMessage());
+        assertEquals(EstadoPedido.EN_PREPARACION, pedido.getEstado());
+        verify(pedidoRepository, never()).save(any(Pedido.class));
+    }
+
+    @Test
+    void cancelarPedido_cuandoEsDeOtroCliente_lanzaAccesoDenegado() {
+        Restaurante restaurante = restaurante(10);
+        Pedido pedido = pedido(50, EstadoPedido.PENDIENTE, restaurante);
+        Usuario otroCliente = Usuario.builder()
+                .id(99)
+                .nombre("Otro")
+                .correo(CORREO_CLIENTE)
+                .rol(Rol.CLIENTE)
+                .build();
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_CLIENTE)).thenReturn(Optional.of(otroCliente));
+
+        AccesoDenegadoException exception = assertThrows(AccesoDenegadoException.class,
+                () -> pedidoService.cancelarPedido(50, CORREO_CLIENTE));
+
+        assertEquals("El pedido no pertenece al cliente", exception.getMessage());
+        assertEquals(EstadoPedido.PENDIENTE, pedido.getEstado());
+        verify(pedidoRepository, never()).save(any(Pedido.class));
+    }
+
+    @Test
+    void cancelarPedido_cuandoClienteNoExiste_lanzaAccesoDenegado() {
+        Restaurante restaurante = restaurante(10);
+        Pedido pedido = pedido(50, EstadoPedido.PENDIENTE, restaurante);
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_CLIENTE)).thenReturn(Optional.empty());
+
+        AccesoDenegadoException exception = assertThrows(AccesoDenegadoException.class,
+                () -> pedidoService.cancelarPedido(50, CORREO_CLIENTE));
+
+        assertEquals("El cliente no existe", exception.getMessage());
+        verify(pedidoRepository, never()).save(any(Pedido.class));
+    }
+
+    @Test
+    void cancelarPedido_cuandoNoExiste_lanzaNotFound() {
+        when(pedidoRepository.findById(99)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> pedidoService.cancelarPedido(99, CORREO_CLIENTE));
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("El pedido no existe", exception.getReason());
+        verifyNoInteractions(usuarioRepository);
+    }
+
     private Usuario cliente() {
         return Usuario.builder()
                 .id(1)
