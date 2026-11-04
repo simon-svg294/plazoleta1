@@ -10,11 +10,13 @@ import com.plazoletaucc.Plazoleta.dto.request.PedidoRequestDTO;
 import com.plazoletaucc.Plazoleta.entity.DetallePedido;
 import com.plazoletaucc.Plazoleta.entity.EstadoPedido;
 import com.plazoletaucc.Plazoleta.entity.Pedido;
+import com.plazoletaucc.Plazoleta.entity.PedidoEstadoLog;
 import com.plazoletaucc.Plazoleta.entity.Plato;
 import com.plazoletaucc.Plazoleta.entity.Restaurante;
 import com.plazoletaucc.Plazoleta.entity.Usuario;
 import com.plazoletaucc.Plazoleta.exception.AccesoDenegadoException;
 import com.plazoletaucc.Plazoleta.exception.ReglaNegocioException;
+import com.plazoletaucc.Plazoleta.repository.PedidoEstadoLogRepository;
 import com.plazoletaucc.Plazoleta.repository.PedidoRepository;
 import com.plazoletaucc.Plazoleta.repository.PlatoRespository;
 import com.plazoletaucc.Plazoleta.repository.RestauranteRepository;
@@ -45,6 +47,7 @@ import java.util.stream.Collectors;
 public class PedidoServiceImpl implements PedidoService {
 
     private final PedidoRepository pedidoRepository;
+    private final PedidoEstadoLogRepository pedidoEstadoLogRepository;
     private final UsuarioRepository usuarioRepository;
     private final RestauranteRepository restauranteRepository;
     private final PlatoRespository platoRespository;
@@ -101,7 +104,10 @@ public class PedidoServiceImpl implements PedidoService {
 
         pedido.setTotal(total);
 
-        return convertir(pedidoRepository.save(pedido));
+        Pedido pedidoGuardado = pedidoRepository.save(pedido);
+        registrarCambioEstado(pedidoGuardado, null, EstadoPedido.PENDIENTE, null);
+
+        return convertir(pedidoGuardado);
     }
 
     // HU-12: el empleado solo ve los pedidos de su restaurante, filtrados por estado.
@@ -159,10 +165,13 @@ public class PedidoServiceImpl implements PedidoService {
             throw new ReglaNegocioException("Solo se pueden asignar pedidos en estado PENDIENTE");
         }
 
+        EstadoPedido estadoAnterior = pedido.getEstado();
         pedido.setEmpleado(empleado);
         pedido.setEstado(EstadoPedido.EN_PREPARACION);
+        pedidoRepository.save(pedido);
+        registrarCambioEstado(pedido, estadoAnterior, EstadoPedido.EN_PREPARACION, empleado);
 
-        return convertir(pedidoRepository.save(pedido));
+        return convertir(pedido);
     }
 
     // HU-14: el empleado notifica que el pedido esta listo y se envia el PIN por SMS.
@@ -181,10 +190,12 @@ public class PedidoServiceImpl implements PedidoService {
                     "Solo se puede marcar como LISTO un pedido en estado EN_PREPARACION");
         }
 
+        EstadoPedido estadoAnterior = pedido.getEstado();
         String pin = generarPin();
         pedido.setPin(pin);
         pedido.setEstado(EstadoPedido.LISTO);
         pedidoRepository.save(pedido);
+        registrarCambioEstado(pedido, estadoAnterior, EstadoPedido.LISTO, empleado);
 
         // El cliente recibe el PIN en su celular para reclamar el pedido.
         smsService.enviarPedidoListo(pedido.getCliente().getCelular(), pin, pedido.getId());
@@ -223,9 +234,12 @@ public class PedidoServiceImpl implements PedidoService {
             throw new ReglaNegocioException("El PIN de seguridad no es correcto");
         }
 
+        EstadoPedido estadoAnterior = pedido.getEstado();
         pedido.setEstado(EstadoPedido.ENTREGADO);
+        pedidoRepository.save(pedido);
+        registrarCambioEstado(pedido, estadoAnterior, EstadoPedido.ENTREGADO, empleado);
 
-        return convertir(pedidoRepository.save(pedido));
+        return convertir(pedido);
     }
 
     // HU-16: el cliente cancela su pedido solo si esta PENDIENTE.
@@ -250,9 +264,12 @@ public class PedidoServiceImpl implements PedidoService {
                     "Lo sentimos, tu pedido ya está en preparación y no puede cancelarse");
         }
 
+        EstadoPedido estadoAnterior = pedido.getEstado();
         pedido.setEstado(EstadoPedido.CANCELADO);
+        pedidoRepository.save(pedido);
+        registrarCambioEstado(pedido, estadoAnterior, EstadoPedido.CANCELADO, null);
 
-        return convertir(pedidoRepository.save(pedido));
+        return convertir(pedido);
     }
 
     private Usuario obtenerEmpleadoConRestaurante(String correoEmpleado) {
@@ -274,6 +291,18 @@ public class PedidoServiceImpl implements PedidoService {
 
     private String generarPin() {
         return String.format("%04d", secureRandom.nextInt(10_000));
+    }
+
+    // HU-17: registra cada cambio de estado para que el cliente consulte la trazabilidad.
+    private void registrarCambioEstado(Pedido pedido, EstadoPedido estadoAnterior,
+                                       EstadoPedido estadoNuevo, Usuario empleado) {
+        pedidoEstadoLogRepository.save(PedidoEstadoLog.builder()
+                .pedido(pedido)
+                .estadoAnterior(estadoAnterior)
+                .estadoNuevo(estadoNuevo)
+                .empleado(empleado)
+                .fechaCambio(LocalDateTime.now())
+                .build());
     }
 
     private Map<Integer, Plato> cargarYValidarPlatos(PedidoRequestDTO dto, Restaurante restaurante) {

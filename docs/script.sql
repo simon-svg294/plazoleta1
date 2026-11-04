@@ -92,6 +92,20 @@ CREATE TABLE detalle_pedido (
                                 CONSTRAINT fk_detalle_plato FOREIGN KEY (id_plato) REFERENCES plato (id)
 ) ENGINE = InnoDB;
 
+-- HU-17: historial de cambios de estado de cada pedido.
+CREATE TABLE pedido_estado_log (
+                                   id               INT NOT NULL AUTO_INCREMENT,
+                                   id_pedido        INT NOT NULL,
+                                   estado_anterior  ENUM('PENDIENTE','EN_PREPARACION','LISTO','ENTREGADO','CANCELADO') NULL,
+                                   estado_nuevo     ENUM('PENDIENTE','EN_PREPARACION','LISTO','ENTREGADO','CANCELADO') NOT NULL,
+                                   id_empleado      INT NULL,
+                                   fecha_cambio     DATETIME NOT NULL,
+                                   CONSTRAINT pk_pedido_estado_log PRIMARY KEY (id),
+                                   CONSTRAINT fk_log_pedido FOREIGN KEY (id_pedido) REFERENCES pedido (id) ON DELETE CASCADE,
+                                   CONSTRAINT fk_log_empleado FOREIGN KEY (id_empleado) REFERENCES usuario (id),
+                                   INDEX idx_log_pedido_fecha (id_pedido, fecha_cambio)
+) ENGINE = InnoDB;
+
 -- Datos iniciales
 INSERT INTO categoria (nombre, descripcion) VALUES
                                                 ('Entradas','Platos para empezar'),

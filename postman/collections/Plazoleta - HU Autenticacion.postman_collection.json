@@ -5993,6 +5993,254 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "O. Consultar trazabilidad (solo CLIENTE) - HU-17",
+      "item": [
+        {
+          "name": "O1 GET trazabilidad sin token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "64a44f44-5b39-4b3f-bdea-8b1e3b54dd6e"
+              }
+            }
+          ],
+          "id": "5caf1ac6-52a8-4b50-b74c-86113fc295f8",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/trazabilidad",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "trazabilidad"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "O2 GET trazabilidad con EMPLEADO -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "f9fc5722-ffb7-4ac0-b2f8-da22a6e50b32"
+              }
+            }
+          ],
+          "id": "f304e9c1-7500-43fc-a474-48618afe98a8",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/trazabilidad",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "trazabilidad"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "O3 GET trazabilidad pedido inexistente -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "const j = pm.response.json();",
+                  "pm.test('Mensaje', () => pm.expect(j.mensaje).to.eql('El pedido no existe'));"
+                ],
+                "id": "d1f341f5-9f4e-4a20-8835-9843ed4f0553"
+              }
+            }
+          ],
+          "id": "6e00ef9a-85f7-4db6-9677-a1e2c87d1193",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/999999/trazabilidad",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "999999",
+                "trazabilidad"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "O4 GET trazabilidad de otro cliente -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));",
+                  "const j = pm.response.json();",
+                  "pm.test('Mensaje', () => pm.expect(j.mensaje).to.eql('El pedido no pertenece al cliente'));"
+                ],
+                "id": "3f6d1c2a-8c0e-4b69-bebc-8ac1a07fdbe2"
+              }
+            }
+          ],
+          "id": "fd00dd7d-70e7-4e92-b829-9ceab6fa4ef1",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtroCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/trazabilidad",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "trazabilidad"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "O5 GET trazabilidad propia -> 200 (4 logs)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const logs = pm.response.json();",
+                  "pm.test('4 cambios de estado', () => pm.expect(logs).to.be.an('array').with.lengthOf(4));",
+                  "pm.test('Creado PENDIENTE', () => { pm.expect(logs[0].estadoAnterior).to.eql(null); pm.expect(logs[0].estadoNuevo).to.eql('PENDIENTE'); });",
+                  "pm.test('Asignado EN_PREPARACION', () => { pm.expect(logs[1].estadoAnterior).to.eql('PENDIENTE'); pm.expect(logs[1].estadoNuevo).to.eql('EN_PREPARACION'); });",
+                  "pm.test('Listo', () => { pm.expect(logs[2].estadoAnterior).to.eql('EN_PREPARACION'); pm.expect(logs[2].estadoNuevo).to.eql('LISTO'); });",
+                  "pm.test('Entregado', () => { pm.expect(logs[3].estadoAnterior).to.eql('LISTO'); pm.expect(logs[3].estadoNuevo).to.eql('ENTREGADO'); });",
+                  "pm.test('Todos son del mismo pedido', () => { const id = Number(pm.collectionVariables.get('idPedido')); logs.forEach(l => pm.expect(l.idPedido).to.eql(id)); });"
+                ],
+                "id": "ad6bbb50-9b05-4a5c-9085-b6e931bb7c6b"
+              }
+            }
+          ],
+          "id": "ee826c04-3762-454b-a336-0ce3dfe8b0eb",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/trazabilidad",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "trazabilidad"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "O6 GET trazabilidad pedido cancelado -> 200 (2 logs)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const logs = pm.response.json();",
+                  "pm.test('2 cambios de estado', () => pm.expect(logs).to.be.an('array').with.lengthOf(2));",
+                  "pm.test('Cancelado por el cliente', () => { pm.expect(logs[1].estadoAnterior).to.eql('PENDIENTE'); pm.expect(logs[1].estadoNuevo).to.eql('CANCELADO'); pm.expect(logs[1].idEmpleado).to.eql(null); });"
+                ],
+                "id": "2a92b9b9-5932-4740-89d0-0733b8423733"
+              }
+            }
+          ],
+          "id": "8899b10f-ea9e-46d4-b5af-6c084d627336",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedidoCancelar}}/trazabilidad",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedidoCancelar}}",
+                "trazabilidad"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "variable": [
