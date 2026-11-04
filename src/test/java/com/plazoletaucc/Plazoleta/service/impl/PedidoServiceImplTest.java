@@ -9,12 +9,14 @@ import com.plazoletaucc.Plazoleta.dto.request.PedidoRequestDTO;
 import com.plazoletaucc.Plazoleta.entity.DetallePedido;
 import com.plazoletaucc.Plazoleta.entity.EstadoPedido;
 import com.plazoletaucc.Plazoleta.entity.Pedido;
+import com.plazoletaucc.Plazoleta.entity.PedidoEstadoLog;
 import com.plazoletaucc.Plazoleta.entity.Plato;
 import com.plazoletaucc.Plazoleta.entity.Restaurante;
 import com.plazoletaucc.Plazoleta.entity.Rol;
 import com.plazoletaucc.Plazoleta.entity.Usuario;
 import com.plazoletaucc.Plazoleta.exception.AccesoDenegadoException;
 import com.plazoletaucc.Plazoleta.exception.ReglaNegocioException;
+import com.plazoletaucc.Plazoleta.repository.PedidoEstadoLogRepository;
 import com.plazoletaucc.Plazoleta.repository.PedidoRepository;
 import com.plazoletaucc.Plazoleta.repository.PlatoRespository;
 import com.plazoletaucc.Plazoleta.repository.RestauranteRepository;
@@ -39,6 +41,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
@@ -58,6 +61,9 @@ class PedidoServiceImplTest {
 
     @Mock
     private PedidoRepository pedidoRepository;
+
+    @Mock
+    private PedidoEstadoLogRepository pedidoEstadoLogRepository;
 
     @Mock
     private UsuarioRepository usuarioRepository;
@@ -124,6 +130,16 @@ class PedidoServiceImplTest {
                         EstadoPedido.LISTO
                 ))
         ));
+
+        ArgumentCaptor<PedidoEstadoLog> logCaptor = ArgumentCaptor.forClass(PedidoEstadoLog.class);
+        verify(pedidoEstadoLogRepository).save(logCaptor.capture());
+        PedidoEstadoLog logInicial = logCaptor.getValue();
+        assertAll(
+                () -> assertNull(logInicial.getEstadoAnterior()),
+                () -> assertEquals(EstadoPedido.PENDIENTE, logInicial.getEstadoNuevo()),
+                () -> assertNull(logInicial.getEmpleado()),
+                () -> assertEquals(50, logInicial.getPedido().getId())
+        );
     }
 
     @Test
@@ -315,6 +331,16 @@ class PedidoServiceImplTest {
                 () -> assertEquals(EstadoPedido.EN_PREPARACION, pedido.getEstado())
         );
         verify(pedidoRepository).save(pedido);
+
+        ArgumentCaptor<PedidoEstadoLog> logCaptor = ArgumentCaptor.forClass(PedidoEstadoLog.class);
+        verify(pedidoEstadoLogRepository).save(logCaptor.capture());
+        PedidoEstadoLog log = logCaptor.getValue();
+        assertAll(
+                () -> assertEquals(EstadoPedido.PENDIENTE, log.getEstadoAnterior()),
+                () -> assertEquals(EstadoPedido.EN_PREPARACION, log.getEstadoNuevo()),
+                () -> assertEquals(empleado, log.getEmpleado()),
+                () -> assertEquals(50, log.getPedido().getId())
+        );
     }
 
     @Test
@@ -387,6 +413,16 @@ class PedidoServiceImplTest {
 
         verify(pedidoRepository).save(pedido);
         verify(smsService).enviarPedidoListo("+573001111111", response.getPin(), 50);
+
+        ArgumentCaptor<PedidoEstadoLog> logCaptor = ArgumentCaptor.forClass(PedidoEstadoLog.class);
+        verify(pedidoEstadoLogRepository).save(logCaptor.capture());
+        PedidoEstadoLog log = logCaptor.getValue();
+        assertAll(
+                () -> assertEquals(EstadoPedido.EN_PREPARACION, log.getEstadoAnterior()),
+                () -> assertEquals(EstadoPedido.LISTO, log.getEstadoNuevo()),
+                () -> assertEquals(empleado, log.getEmpleado()),
+                () -> assertEquals(50, log.getPedido().getId())
+        );
     }
 
     @Test
@@ -458,6 +494,16 @@ class PedidoServiceImplTest {
         );
         assertEquals(EstadoPedido.ENTREGADO, pedido.getEstado());
         verify(pedidoRepository).save(pedido);
+
+        ArgumentCaptor<PedidoEstadoLog> logCaptor = ArgumentCaptor.forClass(PedidoEstadoLog.class);
+        verify(pedidoEstadoLogRepository).save(logCaptor.capture());
+        PedidoEstadoLog log = logCaptor.getValue();
+        assertAll(
+                () -> assertEquals(EstadoPedido.LISTO, log.getEstadoAnterior()),
+                () -> assertEquals(EstadoPedido.ENTREGADO, log.getEstadoNuevo()),
+                () -> assertEquals(empleado, log.getEmpleado()),
+                () -> assertEquals(50, log.getPedido().getId())
+        );
     }
 
     @Test
@@ -578,6 +624,16 @@ class PedidoServiceImplTest {
                 () -> assertEquals(EstadoPedido.CANCELADO, pedido.getEstado())
         );
         verify(pedidoRepository).save(pedido);
+
+        ArgumentCaptor<PedidoEstadoLog> logCaptor = ArgumentCaptor.forClass(PedidoEstadoLog.class);
+        verify(pedidoEstadoLogRepository).save(logCaptor.capture());
+        PedidoEstadoLog log = logCaptor.getValue();
+        assertAll(
+                () -> assertEquals(EstadoPedido.PENDIENTE, log.getEstadoAnterior()),
+                () -> assertEquals(EstadoPedido.CANCELADO, log.getEstadoNuevo()),
+                () -> assertNull(log.getEmpleado()),
+                () -> assertEquals(50, log.getPedido().getId())
+        );
     }
 
     @Test
