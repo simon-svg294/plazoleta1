@@ -68,6 +68,9 @@ public class SecurityConfig {
                         // HU-15: el empleado entrega el pedido con el PIN del cliente
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/pedidos/*/entregar")
                         .hasRole("EMPLEADO")
+                        // HU-16: el cliente cancela su pedido
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/pedidos/*/cancelar")
+                        .hasRole("CLIENTE")
                         .anyRequest()
                         .authenticated()
                 )

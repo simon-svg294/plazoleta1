@@ -24,4 +24,7 @@ public interface PedidoService {
 
     // HU-15: el empleado entrega el pedido validando el PIN de seguridad del cliente.
     PedidoResponseDTO entregarPedido(Integer idPedido, String pin, String correoEmpleado);
+
+    // HU-16: el cliente cancela su pedido solo si esta PENDIENTE.
+    PedidoResponseDTO cancelarPedido(Integer idPedido, String correoCliente);
 }

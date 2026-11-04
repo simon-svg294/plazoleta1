@@ -5471,6 +5471,528 @@
       ],
       "id": "e5555555-5555-4555-8555-555555555100",
       "description": "HU-15: solo el EMPLEADO entrega un pedido LISTO digitando el PIN enviado al cliente. Un pedido ENTREGADO no puede reentregarse ni volver a EN_PREPARACION. Requiere ejecutar L4 antes para dejar pinPedido."
+    },
+    {
+      "name": "N. Cancelar pedido (solo CLIENTE) - HU-16",
+      "item": [
+        {
+          "name": "N0 POST pedido para cancelar -> 201 (guarda idPedidoCancelar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.test('Queda PENDIENTE', () => pm.expect(j.estado).to.eql('PENDIENTE'));",
+                  "pm.test('Guarda idPedidoCancelar', () => pm.collectionVariables.set('idPedidoCancelar', j.id));"
+                ],
+                "id": "b6717c04-6dee-4174-8d98-3a7789b257f2"
+              }
+            }
+          ],
+          "id": "66848a4c-69aa-44ad-a156-ee21f87e967f",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": {{idRestaurante}},\n  \"platos\": [\n    { \"idPlato\": {{idPlato}}, \"cantidad\": 1 }\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N1 PATCH sin token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.response.to.have.status(401));"
+                ],
+                "id": "5cefc190-939c-43e8-845e-60fa7dd9f47c"
+              }
+            }
+          ],
+          "id": "5359ff1e-2195-46eb-abc0-484edab65500",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedidoCancelar}}/cancelar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedidoCancelar}}",
+                "cancelar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N2 PATCH con EMPLEADO -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));"
+                ],
+                "id": "e4ce218c-47fd-4b46-a4fc-47ed8376a8cc"
+              }
+            }
+          ],
+          "id": "6f87f993-5153-471a-af87-bfc62ba3a645",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedidoCancelar}}/cancelar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedidoCancelar}}",
+                "cancelar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N3 PATCH pedido inexistente -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                  "const j = pm.response.json();",
+                  "pm.test('Mensaje', () => pm.expect(j.mensaje).to.eql('El pedido no existe'));"
+                ],
+                "id": "1d7320e9-eb97-48fe-8711-f8ac408ebe86"
+              }
+            }
+          ],
+          "id": "99a7343d-0aeb-4b9d-a1bd-530e1c551384",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/999999/cancelar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "999999",
+                "cancelar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N4 PATCH pedido PENDIENTE -> 200 (CANCELADO)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Estado CANCELADO', () => pm.expect(j.estado).to.eql('CANCELADO'));",
+                  "pm.test('Mismo pedido', () => pm.expect(j.id).to.eql(Number(pm.collectionVariables.get('idPedidoCancelar'))));"
+                ],
+                "id": "26ed4c77-8565-4bc8-8d17-c59837d8c8e6"
+              }
+            }
+          ],
+          "id": "edd95283-36e1-4d6f-9807-2cdc4946b41b",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedidoCancelar}}/cancelar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedidoCancelar}}",
+                "cancelar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N5 PATCH pedido ya CANCELADO -> 400 (mensaje HU-16)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "const j = pm.response.json();",
+                  "pm.test('Mensaje HU-16', () => pm.expect(j.mensaje).to.eql('Lo sentimos, tu pedido ya está en preparación y no puede cancelarse'));"
+                ],
+                "id": "8d7ce8e8-89e2-4045-a9b0-2ded35f6a54a"
+              }
+            }
+          ],
+          "id": "0f366860-c314-43b0-9977-60624617a496",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedidoCancelar}}/cancelar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedidoCancelar}}",
+                "cancelar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N6 POST segundo pedido -> 201 (guarda idPedidoEnPreparacion)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.test('Queda PENDIENTE', () => pm.expect(j.estado).to.eql('PENDIENTE'));",
+                  "pm.test('Guarda idPedidoEnPreparacion', () => pm.collectionVariables.set('idPedidoEnPreparacion', j.id));"
+                ],
+                "id": "519712d8-54a1-4371-b42c-c89b2f9d1cfb"
+              }
+            }
+          ],
+          "id": "9c8f77c2-33bf-4961-be00-d5a6f7b0c2e4",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": {{idRestaurante}},\n  \"platos\": [\n    { \"idPlato\": {{idPlato}}, \"cantidad\": 1 }\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N7 PATCH asignar segundo pedido -> 200 (EN_PREPARACION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Estado EN_PREPARACION', () => pm.expect(j.estado).to.eql('EN_PREPARACION'));"
+                ],
+                "id": "efb17948-ff5b-42ff-aaff-a76a6b6f3220"
+              }
+            }
+          ],
+          "id": "9e0ca704-bebf-47e3-87a2-7e9602e04d5b",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEmpleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedidoEnPreparacion}}/asignar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedidoEnPreparacion}}",
+                "asignar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N8 PATCH pedido EN_PREPARACION -> 400 (mensaje HU-16)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "const j = pm.response.json();",
+                  "pm.test('Mensaje HU-16', () => pm.expect(j.mensaje).to.eql('Lo sentimos, tu pedido ya está en preparación y no puede cancelarse'));"
+                ],
+                "id": "207b50b9-5850-4c69-885f-72c5771ff878"
+              }
+            }
+          ],
+          "id": "3749e070-69d0-4b18-897e-88f1262404fb",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedidoEnPreparacion}}/cancelar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedidoEnPreparacion}}",
+                "cancelar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N9a POST registrar otro cliente -> 201",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('otroClienteCorreo', 'otro' + ts + '@test.com');",
+                  "pm.collectionVariables.set('otroClienteDoc', String(ts).slice(-10));"
+                ],
+                "id": "b11d9413-5233-46e9-a65f-d53097b544ee"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const creado = pm.response.json();",
+                  "pm.test('Devuelve el id del cliente', () => pm.expect(creado.id).to.be.a('number'));"
+                ],
+                "id": "ab8f6bba-e41f-44a0-94a2-c23e22b98c77"
+              }
+            }
+          ],
+          "id": "7cd3a325-21d0-4d9c-b7e7-94ec50e87813",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/usuarios/cliente",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usuarios",
+                "cliente"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Otro\",\n  \"apellido\": \"Cliente\",\n  \"documentoDeIdentidad\": \"{{otroClienteDoc}}\",\n  \"celular\": \"+573001119999\",\n  \"correo\": \"{{otroClienteCorreo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N9b POST login otro cliente -> 200 (guarda tokenOtroCliente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('Devuelve token JWT', () => pm.expect(j.token).to.be.a('string').and.to.include('.'));",
+                  "pm.collectionVariables.set('tokenOtroCliente', j.token);"
+                ],
+                "id": "0b2c293f-24a2-4444-b510-1b1cd59e75a9"
+              }
+            }
+          ],
+          "id": "a9443ef0-cc8a-4a96-9388-5aab1bb86ad2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{otroClienteCorreo}}\",\n  \"clave\": \"Clave123*\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N9c PATCH pedido de otro cliente -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403', () => pm.response.to.have.status(403));",
+                  "const j = pm.response.json();",
+                  "pm.test('Mensaje', () => pm.expect(j.mensaje).to.eql('El pedido no pertenece al cliente'));"
+                ],
+                "id": "2e074ac2-585a-472d-9136-bbbf412d9437"
+              }
+            }
+          ],
+          "id": "a703b52e-4519-4cf6-9398-febf179accee",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtroCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedidoEnPreparacion}}/cancelar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedidoEnPreparacion}}",
+                "cancelar"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "variable": [
@@ -5597,6 +6119,26 @@
     {
       "id": "e5555555-5555-4555-8555-555555555500",
       "key": "pinIncorrecto",
+      "value": ""
+    },
+    {
+      "key": "idPedidoCancelar",
+      "value": ""
+    },
+    {
+      "key": "idPedidoEnPreparacion",
+      "value": ""
+    },
+    {
+      "key": "otroClienteCorreo",
+      "value": ""
+    },
+    {
+      "key": "otroClienteDoc",
+      "value": ""
+    },
+    {
+      "key": "tokenOtroCliente",
       "value": ""
     }
   ]
