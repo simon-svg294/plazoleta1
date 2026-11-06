@@ -4,6 +4,7 @@ import com.plazoletaucc.Plazoleta.entity.EstadoPedido;
 import com.plazoletaucc.Plazoleta.entity.Pedido;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,5 +17,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
     boolean existsByCliente_IdAndEstadoIn(Integer idCliente, Collection<EstadoPedido> estados);
 
     // HU-12: pedidos de un restaurante filtrados por estado, paginados.
+    // Se cargan las relaciones de una vez para evitar el N+1 al convertir a DTO.
+    @EntityGraph(attributePaths = {"cliente", "restaurante", "empleado"})
     Page<Pedido> findByRestaurante_IdAndEstado(Integer idRestaurante, EstadoPedido estado, Pageable pageable);
 }

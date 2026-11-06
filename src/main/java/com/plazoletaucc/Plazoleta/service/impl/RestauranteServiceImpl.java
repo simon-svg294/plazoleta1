@@ -26,6 +26,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RestauranteServiceImpl implements RestauranteService {
 
+    private static final int MAX_PAGE_SIZE = 50;
+
     private final RestauranteRepository restauranteRepository;
     private final UsuarioRepository usuarioRepository;
 
@@ -78,6 +80,9 @@ public class RestauranteServiceImpl implements RestauranteService {
         }
         if (tamano < 1) {
             throw new ReglaNegocioException("El tamano de pagina debe ser 1 o mayor");
+        }
+        if (tamano > MAX_PAGE_SIZE) {
+            throw new ReglaNegocioException("El tamano de pagina no puede superar " + MAX_PAGE_SIZE);
         }
 
         // 2. La base de datos ordena y trae solo la pagina pedida
