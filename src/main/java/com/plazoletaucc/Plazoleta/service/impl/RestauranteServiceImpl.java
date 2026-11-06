@@ -19,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -32,6 +33,7 @@ public class RestauranteServiceImpl implements RestauranteService {
     private final UsuarioRepository usuarioRepository;
 
     @Override
+    @Transactional
     public RestauranteResponseDTO crearRestaurante(RestauranteRequestDTO dto) {
         // Nombre: puede tener numeros, pero no solo numeros
         if (dto.getNombre() != null && dto.getNombre().matches("^[0-9]+$")) {
@@ -73,6 +75,7 @@ public class RestauranteServiceImpl implements RestauranteService {
 
     // HU-09: todos los restaurantes, en orden alfabetico y paginados.
     @Override
+    @Transactional(readOnly = true)
     public PaginaResponseDTO<RestauranteListadoResponseDTO> listarRestaurantes(int pagina, int tamano) {
         // 1. La pagina y el tamano deben tener sentido
         if (pagina < 0) {

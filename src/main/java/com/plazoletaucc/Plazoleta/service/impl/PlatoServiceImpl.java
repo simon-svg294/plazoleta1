@@ -36,6 +36,7 @@ public class PlatoServiceImpl implements PlatoService {
     private final RestauranteRepository restauranteRepository;
 
     @Override
+    @Transactional
     public PlatoResponseDTO registrarPlato(PlatoRequestDTO platoRequestDTO, String correoUsuario) {
         // 1. El restaurante y la categoria deben existir
         Restaurante restaurante = restauranteRepository.findById(platoRequestDTO.getIdRestaurante())
@@ -63,6 +64,7 @@ public class PlatoServiceImpl implements PlatoService {
 
     // HU-04: modificar plato. Solo cambia precio y descripcion; lo demas no se toca.
     @Override
+    @Transactional
     public PlatoResponseDTO modificarPlato(Integer idPlato, ModificarPlatoRequestDTO dto, String correoUsuario) {
         // 1. El plato debe existir
         Plato plato = platoRespository.findById(idPlato)
@@ -81,6 +83,7 @@ public class PlatoServiceImpl implements PlatoService {
 
     // HU-07: habilitar/deshabilitar plato. Solo cambia el estado; lo demas queda igual.
     @Override
+    @Transactional
     public PlatoResponseDTO cambiarEstadoPlato(Integer idPlato, HabilitarPlatoRequestDTO dto, String correoUsuario) {
         // 1. El plato debe existir (404 para no confundirlo con los 400 de regla de negocio)
         Plato plato = platoRespository.findById(idPlato)
