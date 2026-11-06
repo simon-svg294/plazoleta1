@@ -24,6 +24,7 @@ public class CategoriaServiceImpl implements CategoriaService {
                 .build();
         Categoria categoriaGuardada = categoriaRepository.save(categoria);
         return CategoriaResponseDTO.builder()
+                .id(categoriaGuardada.getId())
                 .nombre(categoriaGuardada.getNombre())
                 .descripcion(categoriaGuardada.getDescripcion())
                 .build();
@@ -34,6 +35,7 @@ public class CategoriaServiceImpl implements CategoriaService {
         return categoriaRepository.findAll()
                 .stream()
                 .map(categoria -> CategoriaResponseDTO.builder()
+                        .id(categoria.getId())
                         .nombre(categoria.getNombre())
                         .descripcion(categoria.getDescripcion())
                         .build())

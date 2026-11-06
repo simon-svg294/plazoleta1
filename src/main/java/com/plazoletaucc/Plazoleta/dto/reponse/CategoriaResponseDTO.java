@@ -8,6 +8,7 @@ import lombok.Setter;
 @Setter
 @Builder
 public class CategoriaResponseDTO {
+    private Integer id;
     private String nombre;
     private String descripcion;
 }
