@@ -29,6 +29,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class PlatoServiceImpl implements PlatoService {
+    private static final int MAX_PAGE_SIZE = 50;
+
     private final PlatoRespository platoRespository;
     private final CategoriaRepository categoriaRepository;
     private final RestauranteRepository restauranteRepository;
@@ -104,6 +106,9 @@ public class PlatoServiceImpl implements PlatoService {
         }
         if (tamano < 1) {
             throw new ReglaNegocioException("El tamano de pagina debe ser 1 o mayor");
+        }
+        if (tamano > MAX_PAGE_SIZE) {
+            throw new ReglaNegocioException("El tamano de pagina no puede superar " + MAX_PAGE_SIZE);
         }
 
         // 2. El restaurante del que se quiere ver el menu debe existir

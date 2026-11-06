@@ -2,9 +2,11 @@ package com.plazoletaucc.Plazoleta.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Table(name="plato")
+@BatchSize(size = 50)
 @Getter
 @Setter
 @AllArgsConstructor

@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Archivos de entrega ###
+*.zip
+
+### Variables de entorno locales ###
+.env
+.env.local
+.env.*.local

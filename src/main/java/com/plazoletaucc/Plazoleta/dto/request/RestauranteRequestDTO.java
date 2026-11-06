@@ -14,7 +14,8 @@ public class RestauranteRequestDTO {
     private String nombre;
 
     @NotBlank(message = "El NIT es obligatorio")
-    @Pattern(regexp = "^[0-9]+$", message = "El NIT debe ser unicamente numerico")
+    @Pattern(regexp = "^[0-9]{9,10}(-[0-9])?$",
+            message = "El NIT debe tener 9 o 10 digitos y puede incluir el digito de verificacion separado por guion. Ejemplo: 900000000-1")
     private String nit;
 
     @NotBlank(message = "La direccion es obligatoria")

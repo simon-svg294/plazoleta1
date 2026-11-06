@@ -1,8 +1,11 @@
--- Script corregido: coincide con las entidades Java (Usuario, Restaurante, Categoria, Plato).
--- OJO: borra y vuelve a crear plazoleta_db (solo para desarrollo).
-DROP DATABASE IF EXISTS plazoleta_db;
-CREATE DATABASE plazoleta_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- Script consolidado: coincide con las entidades Java (Usuario, Restaurante, Categoria, Plato, Pedido, DetallePedido).
+-- Solo para desarrollo. No elimina la base completa: recrea las tablas del proyecto.
+CREATE DATABASE IF NOT EXISTS plazoleta_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE plazoleta_db;
+
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS pedido_estado_log, detalle_pedido, pedido, plato, categoria, restaurante, usuario;
+SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE usuario (
                          id                     INT          NOT NULL AUTO_INCREMENT,
@@ -14,6 +17,7 @@ CREATE TABLE usuario (
                          correo                 VARCHAR(100) NOT NULL,
                          clave                  VARCHAR(100) NULL,
                          rol                    ENUM('ADMINISTRADOR','CLIENTE','EMPLEADO','PROPIETARIO') NULL,
+                         id_restaurante         INT          NULL,
                          CONSTRAINT pk_usuario PRIMARY KEY (id),
                          CONSTRAINT uq_usuario_documento UNIQUE (documento_de_identidad),
                          CONSTRAINT uq_usuario_correo UNIQUE (correo)
@@ -32,6 +36,11 @@ CREATE TABLE restaurante (
                              CONSTRAINT fk_restaurante_propietario FOREIGN KEY (id_propietario) REFERENCES usuario (id),
                              INDEX idx_restaurante_nombre (nombre)
 ) ENGINE = InnoDB;
+
+-- HU-12: el empleado pertenece a un restaurante.
+ALTER TABLE usuario
+    ADD CONSTRAINT fk_usuario_restaurante
+    FOREIGN KEY (id_restaurante) REFERENCES restaurante (id);
 
 CREATE TABLE categoria (
                            id          INT          NOT NULL AUTO_INCREMENT,
@@ -52,7 +61,56 @@ CREATE TABLE plato (
                        CONSTRAINT pk_plato PRIMARY KEY (id),
                        CONSTRAINT chk_plato_precio CHECK (precio > 0),
                        CONSTRAINT fk_plato_categoria FOREIGN KEY (id_categoria) REFERENCES categoria (id),
-                       CONSTRAINT fk_plato_restaurante FOREIGN KEY (id_restaurante) REFERENCES restaurante (id)
+                       CONSTRAINT fk_plato_restaurante FOREIGN KEY (id_restaurante) REFERENCES restaurante (id),
+                        INDEX idx_plato_restaurante_estado (id_restaurante, estado),
+                        INDEX idx_plato_restaurante_categoria_estado (id_restaurante, id_categoria, estado)
+) ENGINE = InnoDB;
+
+CREATE TABLE pedido (
+                        id              INT NOT NULL AUTO_INCREMENT,
+                        id_cliente      INT NOT NULL,
+                        id_restaurante  INT NOT NULL,
+                        id_empleado     INT NULL,
+                        estado          ENUM('PENDIENTE','EN_PREPARACION','LISTO','ENTREGADO','CANCELADO') NOT NULL,
+                        fecha_creacion  DATETIME NOT NULL,
+                        total           INT NOT NULL,
+                        pin             VARCHAR(6) NULL,
+                        -- Bloqueo optimista para cambios de estado concurrentes.
+                        version         INT NOT NULL DEFAULT 0,
+                        CONSTRAINT pk_pedido PRIMARY KEY (id),
+                        CONSTRAINT fk_pedido_cliente FOREIGN KEY (id_cliente) REFERENCES usuario (id),
+                        CONSTRAINT fk_pedido_restaurante FOREIGN KEY (id_restaurante) REFERENCES restaurante (id),
+                        CONSTRAINT fk_pedido_empleado FOREIGN KEY (id_empleado) REFERENCES usuario (id),
+                        INDEX idx_pedido_cliente_estado (id_cliente, estado),
+                        INDEX idx_pedido_restaurante_estado (id_restaurante, estado),
+                        INDEX idx_pedido_empleado (id_empleado)
+) ENGINE = InnoDB;
+
+CREATE TABLE detalle_pedido (
+                                id               INT NOT NULL AUTO_INCREMENT,
+                                id_pedido        INT NOT NULL,
+                                id_plato         INT NOT NULL,
+                                cantidad         INT NOT NULL,
+                                precio_unitario  INT NOT NULL,
+                                CONSTRAINT pk_detalle_pedido PRIMARY KEY (id),
+                                CONSTRAINT uq_detalle_pedido_plato UNIQUE (id_pedido, id_plato),
+                                CONSTRAINT chk_detalle_cantidad CHECK (cantidad > 0),
+                                CONSTRAINT fk_detalle_pedido FOREIGN KEY (id_pedido) REFERENCES pedido (id) ON DELETE CASCADE,
+                                CONSTRAINT fk_detalle_plato FOREIGN KEY (id_plato) REFERENCES plato (id)
+) ENGINE = InnoDB;
+
+-- HU-17: historial de cambios de estado de cada pedido.
+CREATE TABLE pedido_estado_log (
+                                   id               INT NOT NULL AUTO_INCREMENT,
+                                   id_pedido        INT NOT NULL,
+                                   estado_anterior  ENUM('PENDIENTE','EN_PREPARACION','LISTO','ENTREGADO','CANCELADO') NULL,
+                                   estado_nuevo     ENUM('PENDIENTE','EN_PREPARACION','LISTO','ENTREGADO','CANCELADO') NOT NULL,
+                                   id_empleado      INT NULL,
+                                   fecha_cambio     DATETIME NOT NULL,
+                                   CONSTRAINT pk_pedido_estado_log PRIMARY KEY (id),
+                                   CONSTRAINT fk_log_pedido FOREIGN KEY (id_pedido) REFERENCES pedido (id) ON DELETE CASCADE,
+                                   CONSTRAINT fk_log_empleado FOREIGN KEY (id_empleado) REFERENCES usuario (id),
+                                   INDEX idx_log_pedido_fecha (id_pedido, fecha_cambio)
 ) ENGINE = InnoDB;
 
 -- Datos iniciales
@@ -74,6 +132,20 @@ FROM usuario WHERE correo='admin@plazoleta.com';
 INSERT INTO usuario (nombre, apellido, documento_de_identidad, celular, fecha_de_nacimiento, correo, clave, rol)
 SELECT 'Empleado','Prueba','2000000002','+573002222222','1995-03-10','empleado@plazoleta.com', clave, 'EMPLEADO'
 FROM usuario WHERE correo='admin@plazoleta.com';
+
+-- HU-12: propietario y restaurante demo para que el empleado de prueba
+-- tenga un restaurante asignado y pueda listar pedidos.
+INSERT INTO usuario (nombre, apellido, documento_de_identidad, celular, fecha_de_nacimiento, correo, clave, rol)
+SELECT 'Propietario','Demo','3000000000','+573003333333','1990-01-01','propietario@plazoleta.com', clave, 'PROPIETARIO'
+FROM usuario WHERE correo='admin@plazoleta.com';
+
+INSERT INTO restaurante (nombre, nit, direccion, telefono, url_logo, id_propietario)
+SELECT 'Restaurante Demo','900000000-1','Calle 1 # 2-3','+573004444444','https://example.com/logo.png', id
+FROM usuario WHERE correo='propietario@plazoleta.com';
+
+UPDATE usuario
+SET id_restaurante = (SELECT id FROM restaurante WHERE nit = '900000000-1')
+WHERE correo = 'empleado@plazoleta.com';
 
 SELECT id, correo, rol FROM usuario;
 

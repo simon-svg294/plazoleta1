@@ -4,16 +4,21 @@ import com.plazoletaucc.Plazoleta.dto.reponse.RegistroResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.request.ClienteRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.EmpleadoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.RegistroRequestDTO;
+import com.plazoletaucc.Plazoleta.entity.Restaurante;
 import com.plazoletaucc.Plazoleta.entity.Rol;
 import com.plazoletaucc.Plazoleta.entity.Usuario;
+import com.plazoletaucc.Plazoleta.exception.AccesoDenegadoException;
 import com.plazoletaucc.Plazoleta.exception.CorreoDuplicadoException;
 import com.plazoletaucc.Plazoleta.exception.DocumentoDuplicadoException;
 import com.plazoletaucc.Plazoleta.exception.MenorDeEdadException;
+import com.plazoletaucc.Plazoleta.exception.ReglaNegocioException;
+import com.plazoletaucc.Plazoleta.repository.RestauranteRepository;
 import com.plazoletaucc.Plazoleta.repository.UsuarioRepository;
 import com.plazoletaucc.Plazoleta.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -22,12 +27,17 @@ import java.time.Period;
 @RequiredArgsConstructor
 public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioRepository usuarioRepository;
+    private final RestauranteRepository restauranteRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
+    @Transactional
     public RegistroResponseDTO registrarUsuario(RegistroRequestDTO registroRequestDTO) {
         if(usuarioRepository.existsByCorreo(registroRequestDTO.getCorreo())){
             throw new CorreoDuplicadoException("El correo ya existe");
+        }
+        if(usuarioRepository.existsByDocumentoDeIdentidad(registroRequestDTO.getDocumentoDeIdentidad())){
+            throw new DocumentoDuplicadoException("El documento de identidad ya existe");
         }
 
         int edad = Period.between(registroRequestDTO.getFechaDeNacimiento(), LocalDate.now()).getYears();
@@ -49,6 +59,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuarioGuardado =  usuarioRepository.save(usuario);
 
         return RegistroResponseDTO.builder()
+                .id(usuarioGuardado.getId())
                 .nombre(usuario.getNombre())
                 .apellido(usuario.getApellido())
                 .correo(usuario.getCorreo())
@@ -58,12 +69,23 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
+    @Transactional
     public RegistroResponseDTO crearEmpleado(EmpleadoRequestDTO empleadoRequestDTO, String correoPropietario) {
         if(usuarioRepository.existsByCorreo(empleadoRequestDTO.getCorreo())){
             throw new CorreoDuplicadoException("El correo ya existe");
         }
         if(usuarioRepository.existsByDocumentoDeIdentidad(empleadoRequestDTO.getDocumentoDeIdentidad())){
             throw new DocumentoDuplicadoException("El documento de identidad ya existe");
+        }
+
+        // HU-12: el empleado solo puede crearse en un restaurante del propietario autenticado.
+        Restaurante restaurante = restauranteRepository.findById(empleadoRequestDTO.getIdRestaurante())
+                .orElseThrow(() -> new ReglaNegocioException("El restaurante no existe"));
+
+        if (restaurante.getPropietario() == null
+                || !restaurante.getPropietario().getCorreo().equals(correoPropietario)) {
+            throw new AccesoDenegadoException(
+                    "Solo el propietario del restaurante puede crear sus empleados");
         }
 
         Usuario empleado = Usuario.builder()
@@ -74,11 +96,13 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .correo(empleadoRequestDTO.getCorreo())
                 .clave(passwordEncoder.encode(empleadoRequestDTO.getClave()))
                 .rol(Rol.EMPLEADO)
+                .restaurante(restaurante)
                 .build();
 
         Usuario empleadoGuardado = usuarioRepository.save(empleado);
 
         return RegistroResponseDTO.builder()
+                .id(empleadoGuardado.getId())
                 .nombre(empleadoGuardado.getNombre())
                 .apellido(empleadoGuardado.getApellido())
                 .correo(empleadoGuardado.getCorreo())
@@ -88,6 +112,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
+    @Transactional
     public RegistroResponseDTO registrarCliente(ClienteRequestDTO clienteRequestDTO) {
         if(usuarioRepository.existsByCorreo(clienteRequestDTO.getCorreo())){
             throw new CorreoDuplicadoException("El correo ya existe");
@@ -109,6 +134,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario clienteGuardado = usuarioRepository.save(cliente);
 
         return RegistroResponseDTO.builder()
+                .id(clienteGuardado.getId())
                 .nombre(clienteGuardado.getNombre())
                 .apellido(clienteGuardado.getApellido())
                 .correo(clienteGuardado.getCorreo())
