@@ -4,6 +4,7 @@ import com.plazoletaucc.Plazoleta.dto.reponse.DetallePedidoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PaginaResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoListadoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoListoResponseDTO;
+import com.plazoletaucc.Plazoleta.dto.reponse.PedidoPinResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.request.DetallePedidoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.PedidoRequestDTO;
@@ -14,6 +15,7 @@ import com.plazoletaucc.Plazoleta.entity.PedidoEstadoLog;
 import com.plazoletaucc.Plazoleta.entity.Plato;
 import com.plazoletaucc.Plazoleta.entity.Restaurante;
 import com.plazoletaucc.Plazoleta.entity.Usuario;
+import com.plazoletaucc.Plazoleta.event.PedidoListoEvent;
 import com.plazoletaucc.Plazoleta.exception.AccesoDenegadoException;
 import com.plazoletaucc.Plazoleta.exception.ReglaNegocioException;
 import com.plazoletaucc.Plazoleta.repository.PedidoEstadoLogRepository;
@@ -22,8 +24,8 @@ import com.plazoletaucc.Plazoleta.repository.PlatoRespository;
 import com.plazoletaucc.Plazoleta.repository.RestauranteRepository;
 import com.plazoletaucc.Plazoleta.repository.UsuarioRepository;
 import com.plazoletaucc.Plazoleta.service.PedidoService;
-import com.plazoletaucc.Plazoleta.service.SmsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,12 +48,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PedidoServiceImpl implements PedidoService {
 
+    private static final int MAX_PAGE_SIZE = 50;
+
     private final PedidoRepository pedidoRepository;
     private final PedidoEstadoLogRepository pedidoEstadoLogRepository;
     private final UsuarioRepository usuarioRepository;
     private final RestauranteRepository restauranteRepository;
     private final PlatoRespository platoRespository;
-    private final SmsService smsService;
+    private final ApplicationEventPublisher eventPublisher;
 
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -121,6 +125,9 @@ public class PedidoServiceImpl implements PedidoService {
         }
         if (tamano < 1) {
             throw new ReglaNegocioException("El tamano de pagina debe ser 1 o mayor");
+        }
+        if (tamano > MAX_PAGE_SIZE) {
+            throw new ReglaNegocioException("El tamano de pagina no puede superar " + MAX_PAGE_SIZE);
         }
         if (estado == null) {
             throw new ReglaNegocioException("El estado es obligatorio");
@@ -198,13 +205,40 @@ public class PedidoServiceImpl implements PedidoService {
         registrarCambioEstado(pedido, estadoAnterior, EstadoPedido.LISTO, empleado);
 
         // El cliente recibe el PIN en su celular para reclamar el pedido.
-        smsService.enviarPedidoListo(pedido.getCliente().getCelular(), pin, pedido.getId());
+        // El evento se procesa despues del commit para no notificar un pedido que termine en rollback.
+        eventPublisher.publishEvent(new PedidoListoEvent(
+                pedido.getCliente().getCelular(), pin, pedido.getId()));
 
+        // Importante: el PIN NO se devuelve en la respuesta al empleado.
         return PedidoListoResponseDTO.builder()
                 .id(pedido.getId())
                 .estado(pedido.getEstado())
-                .pin(pin)
                 .mensaje("Pedido listo. Se envio el PIN de seguridad al cliente por SMS")
+                .build();
+    }
+
+    // HU-14/HU-15: el cliente consulta el PIN de su propio pedido cuando esta LISTO.
+    @Override
+    @Transactional(readOnly = true)
+    public PedidoPinResponseDTO consultarPinPedido(Integer idPedido, String correoCliente) {
+        Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "El pedido no existe"));
+
+        Usuario cliente = usuarioRepository.findByCorreo(correoCliente)
+                .orElseThrow(() -> new AccesoDenegadoException("El cliente no existe"));
+
+        if (!pedido.getCliente().getId().equals(cliente.getId())) {
+            throw new AccesoDenegadoException("El pedido no pertenece al cliente");
+        }
+
+        if (pedido.getEstado() != EstadoPedido.LISTO || pedido.getPin() == null) {
+            throw new ReglaNegocioException("El pedido no esta LISTO");
+        }
+
+        return PedidoPinResponseDTO.builder()
+                .id(pedido.getId())
+                .pin(pedido.getPin())
                 .build();
     }
 

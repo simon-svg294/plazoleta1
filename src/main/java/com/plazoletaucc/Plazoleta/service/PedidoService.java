@@ -3,6 +3,7 @@ package com.plazoletaucc.Plazoleta.service;
 import com.plazoletaucc.Plazoleta.dto.reponse.PaginaResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoListadoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoListoResponseDTO;
+import com.plazoletaucc.Plazoleta.dto.reponse.PedidoPinResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.request.PedidoRequestDTO;
 import com.plazoletaucc.Plazoleta.entity.EstadoPedido;
@@ -21,6 +22,9 @@ public interface PedidoService {
 
     // HU-14: el empleado notifica que el pedido esta listo, genera el PIN y lo envia por SMS.
     PedidoListoResponseDTO marcarPedidoListo(Integer idPedido, String correoEmpleado);
+
+    // HU-14/HU-15: el cliente consulta el PIN de su pedido cuando esta LISTO.
+    PedidoPinResponseDTO consultarPinPedido(Integer idPedido, String correoCliente);
 
     // HU-15: el empleado entrega el pedido validando el PIN de seguridad del cliente.
     PedidoResponseDTO entregarPedido(Integer idPedido, String pin, String correoEmpleado);

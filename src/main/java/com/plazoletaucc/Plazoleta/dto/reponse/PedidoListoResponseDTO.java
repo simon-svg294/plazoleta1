@@ -17,6 +17,5 @@ public class PedidoListoResponseDTO {
 
     private Integer id;
     private EstadoPedido estado;
-    private String pin;
     private String mensaje;
 }

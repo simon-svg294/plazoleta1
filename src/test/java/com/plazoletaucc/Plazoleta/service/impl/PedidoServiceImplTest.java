@@ -3,6 +3,7 @@ package com.plazoletaucc.Plazoleta.service.impl;
 import com.plazoletaucc.Plazoleta.dto.reponse.PaginaResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoListadoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoListoResponseDTO;
+import com.plazoletaucc.Plazoleta.dto.reponse.PedidoPinResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.request.DetallePedidoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.PedidoRequestDTO;
@@ -14,6 +15,7 @@ import com.plazoletaucc.Plazoleta.entity.Plato;
 import com.plazoletaucc.Plazoleta.entity.Restaurante;
 import com.plazoletaucc.Plazoleta.entity.Rol;
 import com.plazoletaucc.Plazoleta.entity.Usuario;
+import com.plazoletaucc.Plazoleta.event.PedidoListoEvent;
 import com.plazoletaucc.Plazoleta.exception.AccesoDenegadoException;
 import com.plazoletaucc.Plazoleta.exception.ReglaNegocioException;
 import com.plazoletaucc.Plazoleta.repository.PedidoEstadoLogRepository;
@@ -21,13 +23,13 @@ import com.plazoletaucc.Plazoleta.repository.PedidoRepository;
 import com.plazoletaucc.Plazoleta.repository.PlatoRespository;
 import com.plazoletaucc.Plazoleta.repository.RestauranteRepository;
 import com.plazoletaucc.Plazoleta.repository.UsuarioRepository;
-import com.plazoletaucc.Plazoleta.service.SmsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -75,7 +77,7 @@ class PedidoServiceImplTest {
     private PlatoRespository platoRespository;
 
     @Mock
-    private SmsService smsService;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private PedidoServiceImpl pedidoService;
@@ -389,7 +391,7 @@ class PedidoServiceImplTest {
     // ---------------- HU-14: notificar pedido listo ----------------
 
     @Test
-    void marcarPedidoListo_cuandoEstaEnPreparacion_generaPinYEnviaSms() {
+    void marcarPedidoListo_cuandoEstaEnPreparacion_generaPinYPublicaEvento() {
         Restaurante restaurante = restaurante(10);
         Usuario empleado = empleado(restaurante);
         Pedido pedido = pedido(50, EstadoPedido.EN_PREPARACION, restaurante);
@@ -402,17 +404,27 @@ class PedidoServiceImplTest {
         assertAll(
                 () -> assertEquals(50, response.getId()),
                 () -> assertEquals(EstadoPedido.LISTO, response.getEstado()),
-                () -> assertNotNull(response.getPin()),
-                () -> assertEquals(4, response.getPin().length())
+                // HU-15: el PIN nunca debe viajar en la respuesta al empleado.
+                () -> assertEquals("Pedido listo. Se envio el PIN de seguridad al cliente por SMS",
+                        response.getMensaje())
         );
 
         assertAll(
                 () -> assertEquals(EstadoPedido.LISTO, pedido.getEstado()),
-                () -> assertEquals(response.getPin(), pedido.getPin())
+                () -> assertNotNull(pedido.getPin()),
+                () -> assertEquals(4, pedido.getPin().length())
         );
 
         verify(pedidoRepository).save(pedido);
-        verify(smsService).enviarPedidoListo("+573001111111", response.getPin(), 50);
+
+        ArgumentCaptor<PedidoListoEvent> eventoCaptor = ArgumentCaptor.forClass(PedidoListoEvent.class);
+        verify(eventPublisher).publishEvent(eventoCaptor.capture());
+        PedidoListoEvent evento = eventoCaptor.getValue();
+        assertAll(
+                () -> assertEquals("+573001111111", evento.celular()),
+                () -> assertEquals(pedido.getPin(), evento.pin()),
+                () -> assertEquals(50, evento.idPedido())
+        );
 
         ArgumentCaptor<PedidoEstadoLog> logCaptor = ArgumentCaptor.forClass(PedidoEstadoLog.class);
         verify(pedidoEstadoLogRepository).save(logCaptor.capture());
@@ -440,7 +452,7 @@ class PedidoServiceImplTest {
         assertEquals("Solo se puede marcar como LISTO un pedido en estado EN_PREPARACION",
                 exception.getMessage());
         verify(pedidoRepository, never()).save(any(Pedido.class));
-        verifyNoInteractions(smsService);
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -455,7 +467,7 @@ class PedidoServiceImplTest {
                 () -> pedidoService.marcarPedidoListo(50, CORREO_EMPLEADO));
 
         assertEquals("El pedido no pertenece al restaurante del empleado", exception.getMessage());
-        verifyNoInteractions(smsService);
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -467,7 +479,73 @@ class PedidoServiceImplTest {
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
         assertEquals("El pedido no existe", exception.getReason());
-        verifyNoInteractions(smsService, usuarioRepository);
+        verifyNoInteractions(eventPublisher, usuarioRepository);
+    }
+
+    // ---------------- HU-14/HU-15: consultar PIN (solo el cliente dueño) ----------------
+
+    @Test
+    void consultarPinPedido_cuandoEsSuPedidoYEstaListo_devuelveElPin() {
+        Restaurante restaurante = restaurante(10);
+        Pedido pedido = pedido(50, EstadoPedido.LISTO, restaurante);
+        pedido.setPin("1234");
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_CLIENTE)).thenReturn(Optional.of(cliente()));
+
+        PedidoPinResponseDTO response = pedidoService.consultarPinPedido(50, CORREO_CLIENTE);
+
+        assertAll(
+                () -> assertEquals(50, response.getId()),
+                () -> assertEquals("1234", response.getPin())
+        );
+    }
+
+    @Test
+    void consultarPinPedido_cuandoEsDeOtroCliente_lanzaAccesoDenegado() {
+        Restaurante restaurante = restaurante(10);
+        Pedido pedido = pedido(50, EstadoPedido.LISTO, restaurante);
+        pedido.setPin("1234");
+        Usuario otroCliente = Usuario.builder()
+                .id(99)
+                .nombre("Otro")
+                .correo(CORREO_CLIENTE)
+                .rol(Rol.CLIENTE)
+                .build();
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_CLIENTE)).thenReturn(Optional.of(otroCliente));
+
+        AccesoDenegadoException exception = assertThrows(AccesoDenegadoException.class,
+                () -> pedidoService.consultarPinPedido(50, CORREO_CLIENTE));
+
+        assertEquals("El pedido no pertenece al cliente", exception.getMessage());
+    }
+
+    @Test
+    void consultarPinPedido_cuandoNoEstaListo_lanzaReglaNegocio() {
+        Restaurante restaurante = restaurante(10);
+        Pedido pedido = pedido(50, EstadoPedido.EN_PREPARACION, restaurante);
+
+        when(pedidoRepository.findById(50)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findByCorreo(CORREO_CLIENTE)).thenReturn(Optional.of(cliente()));
+
+        ReglaNegocioException exception = assertThrows(ReglaNegocioException.class,
+                () -> pedidoService.consultarPinPedido(50, CORREO_CLIENTE));
+
+        assertEquals("El pedido no esta LISTO", exception.getMessage());
+    }
+
+    @Test
+    void consultarPinPedido_cuandoNoExiste_lanzaNotFound() {
+        when(pedidoRepository.findById(99)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> pedidoService.consultarPinPedido(99, CORREO_CLIENTE));
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("El pedido no existe", exception.getReason());
+        verifyNoInteractions(usuarioRepository);
     }
 
     // ---------------- HU-15: entregar pedido con PIN ----------------

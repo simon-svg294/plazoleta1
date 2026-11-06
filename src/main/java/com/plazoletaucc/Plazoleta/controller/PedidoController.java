@@ -3,6 +3,7 @@ package com.plazoletaucc.Plazoleta.controller;
 import com.plazoletaucc.Plazoleta.dto.reponse.PaginaResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoListadoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoListoResponseDTO;
+import com.plazoletaucc.Plazoleta.dto.reponse.PedidoPinResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.reponse.PedidoResponseDTO;
 import com.plazoletaucc.Plazoleta.dto.request.EntregarPedidoRequestDTO;
 import com.plazoletaucc.Plazoleta.dto.request.PedidoRequestDTO;
@@ -69,6 +70,14 @@ public class PedidoController {
     public ResponseEntity<PedidoListoResponseDTO> marcarPedidoListo(@PathVariable Integer idPedido,
                                                                     Authentication authentication) {
         return ResponseEntity.ok(pedidoService.marcarPedidoListo(idPedido, authentication.getName()));
+    }
+
+    // HU-14/HU-15: el cliente consulta el PIN de su pedido para reclamarlo.
+    @Operation(summary = "Consultar PIN del pedido", description = "HU-14/HU-15: el cliente consulta el PIN de seguridad de su propio pedido cuando esta LISTO.")
+    @GetMapping("/{idPedido}/pin")
+    public ResponseEntity<PedidoPinResponseDTO> consultarPinPedido(@PathVariable Integer idPedido,
+                                                                   Authentication authentication) {
+        return ResponseEntity.ok(pedidoService.consultarPinPedido(idPedido, authentication.getName()));
     }
 
     // HU-15: el empleado entrega el pedido digitando el PIN de seguridad del cliente.

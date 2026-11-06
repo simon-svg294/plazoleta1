@@ -4841,7 +4841,7 @@
           "response": []
         },
         {
-          "name": "L4 PATCH pedido EN_PREPARACION -> 200 (LISTO + PIN)",
+          "name": "L4 PATCH pedido EN_PREPARACION -> 200 (LISTO, sin PIN)",
           "event": [
             {
               "listen": "test",
@@ -4851,8 +4851,7 @@
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
                   "const j = pm.response.json();",
                   "pm.test('Estado LISTO', () => pm.expect(j.estado).to.eql('LISTO'));",
-                  "pm.test('PIN de 4 digitos', () => pm.expect(j.pin).to.match(/^\\d{4}$/));",
-                  "pm.test('Guarda el PIN', () => pm.collectionVariables.set('pinPedido', j.pin));"
+                  "pm.test('No expone el PIN al empleado', () => pm.expect(j.pin).to.be.undefined);"
                 ],
                 "id": "d4444444-4444-4444-8444-444444444404"
               }
@@ -4983,6 +4982,48 @@
     {
       "name": "M. Entregar pedido (solo EMPLEADO) - HU-15",
       "item": [
+        {
+          "name": "M0 GET PIN del pedido (CLIENTE) -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('PIN de 4 digitos', () => pm.expect(j.pin).to.match(/^\\d{4}$/));",
+                  "pm.test('Guarda el PIN', () => pm.collectionVariables.set('pinPedido', j.pin));"
+                ],
+                "id": "e5555555-5555-4555-8555-555555555510"
+              }
+            }
+          ],
+          "id": "e5555555-5555-4555-8555-555555555100",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pedidos/{{idPedido}}/pin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pedidos",
+                "{{idPedido}}",
+                "pin"
+              ]
+            }
+          },
+          "response": []
+        },
         {
           "name": "M1 PATCH sin token -> 401",
           "event": [

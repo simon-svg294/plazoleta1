@@ -1,8 +1,11 @@
--- Script corregido: coincide con las entidades Java (Usuario, Restaurante, Categoria, Plato, Pedido, DetallePedido).
--- OJO: borra y vuelve a crear plazoleta_db (solo para desarrollo).
-DROP DATABASE IF EXISTS plazoleta_db;
-CREATE DATABASE plazoleta_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- Script consolidado: coincide con las entidades Java (Usuario, Restaurante, Categoria, Plato, Pedido, DetallePedido).
+-- Solo para desarrollo. No elimina la base completa: recrea las tablas del proyecto.
+CREATE DATABASE IF NOT EXISTS plazoleta_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE plazoleta_db;
+
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS pedido_estado_log, detalle_pedido, pedido, plato, categoria, restaurante, usuario;
+SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE usuario (
                          id                     INT          NOT NULL AUTO_INCREMENT,
@@ -58,7 +61,9 @@ CREATE TABLE plato (
                        CONSTRAINT pk_plato PRIMARY KEY (id),
                        CONSTRAINT chk_plato_precio CHECK (precio > 0),
                        CONSTRAINT fk_plato_categoria FOREIGN KEY (id_categoria) REFERENCES categoria (id),
-                       CONSTRAINT fk_plato_restaurante FOREIGN KEY (id_restaurante) REFERENCES restaurante (id)
+                       CONSTRAINT fk_plato_restaurante FOREIGN KEY (id_restaurante) REFERENCES restaurante (id),
+                        INDEX idx_plato_restaurante_estado (id_restaurante, estado),
+                        INDEX idx_plato_restaurante_categoria_estado (id_restaurante, id_categoria, estado)
 ) ENGINE = InnoDB;
 
 CREATE TABLE pedido (
@@ -70,6 +75,8 @@ CREATE TABLE pedido (
                         fecha_creacion  DATETIME NOT NULL,
                         total           INT NOT NULL,
                         pin             VARCHAR(6) NULL,
+                        -- Bloqueo optimista para cambios de estado concurrentes.
+                        version         INT NOT NULL DEFAULT 0,
                         CONSTRAINT pk_pedido PRIMARY KEY (id),
                         CONSTRAINT fk_pedido_cliente FOREIGN KEY (id_cliente) REFERENCES usuario (id),
                         CONSTRAINT fk_pedido_restaurante FOREIGN KEY (id_restaurante) REFERENCES restaurante (id),

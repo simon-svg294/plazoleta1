@@ -2,6 +2,7 @@ package com.plazoletaucc.Plazoleta.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -48,7 +49,14 @@ public class Pedido {
     @Column(length = 6)
     private String pin;
 
+    // Bloqueo optimista: evita que dos empleados cambien el estado del mismo pedido a la vez.
+    @Version
+    @Column(nullable = false)
+    private Integer version;
+
+    // Evita el N+1 al listar pedidos: carga los detalles por lotes.
     @Builder.Default
+    @BatchSize(size = 50)
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetallePedido> detalles = new ArrayList<>();
 

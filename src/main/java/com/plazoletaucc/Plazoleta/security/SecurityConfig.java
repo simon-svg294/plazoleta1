@@ -43,6 +43,9 @@ public class SecurityConfig {
                         .hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/empleado")
                         .hasRole("PROPIETARIO")
+                        // Las categorias solo las administra el ADMINISTRADOR.
+                        .requestMatchers(HttpMethod.POST, "/api/v1/categorias/registro")
+                        .hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/api/v1/restaurantes")
                         .hasRole("ADMINISTRADOR")
                         // HU-09: el cliente es el unico que lista los restaurantes
@@ -61,6 +64,9 @@ public class SecurityConfig {
                         .hasRole("EMPLEADO")
                         // HU-17: el cliente consulta la trazabilidad de sus propios pedidos
                         .requestMatchers(HttpMethod.GET, "/api/v1/pedidos/*/trazabilidad")
+                        .hasRole("CLIENTE")
+                        // HU-14/HU-15: solo el cliente puede consultar el PIN de su propio pedido
+                        .requestMatchers(HttpMethod.GET, "/api/v1/pedidos/*/pin")
                         .hasRole("CLIENTE")
                         // HU-13: el empleado se asigna a un pedido y lo pasa a EN_PREPARACION
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/pedidos/*/asignar")
