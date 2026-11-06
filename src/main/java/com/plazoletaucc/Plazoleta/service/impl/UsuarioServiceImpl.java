@@ -18,6 +18,7 @@ import com.plazoletaucc.Plazoleta.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -30,9 +31,13 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
+    @Transactional
     public RegistroResponseDTO registrarUsuario(RegistroRequestDTO registroRequestDTO) {
         if(usuarioRepository.existsByCorreo(registroRequestDTO.getCorreo())){
             throw new CorreoDuplicadoException("El correo ya existe");
+        }
+        if(usuarioRepository.existsByDocumentoDeIdentidad(registroRequestDTO.getDocumentoDeIdentidad())){
+            throw new DocumentoDuplicadoException("El documento de identidad ya existe");
         }
 
         int edad = Period.between(registroRequestDTO.getFechaDeNacimiento(), LocalDate.now()).getYears();
@@ -64,6 +69,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
+    @Transactional
     public RegistroResponseDTO crearEmpleado(EmpleadoRequestDTO empleadoRequestDTO, String correoPropietario) {
         if(usuarioRepository.existsByCorreo(empleadoRequestDTO.getCorreo())){
             throw new CorreoDuplicadoException("El correo ya existe");
@@ -106,6 +112,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
+    @Transactional
     public RegistroResponseDTO registrarCliente(ClienteRequestDTO clienteRequestDTO) {
         if(usuarioRepository.existsByCorreo(clienteRequestDTO.getCorreo())){
             throw new CorreoDuplicadoException("El correo ya existe");
