@@ -59,7 +59,7 @@ npx newman run "postman/collections/Plazoleta - HU Autenticacion.postman_collect
 ```
 
 Requiere la aplicación en ejecución y la base de datos creada con
-`docs/script.sql` (o migrada con `docs/migration-sprint3.sql`).
+`docs/script.sql`.
 
 ## Colección obsoleta
 

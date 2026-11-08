@@ -147,5 +147,32 @@ UPDATE usuario
 SET id_restaurante = (SELECT id FROM restaurante WHERE nit = '900000000-1')
 WHERE correo = 'empleado@plazoleta.com';
 
+-- Platos de demostracion del restaurante demo (HU-03 / HU-10).
+-- Se resuelve el id del restaurante por NIT para no depender del autoincremento.
+INSERT INTO plato (nombre, precio, descripcion, url_imagen, estado, id_categoria, id_restaurante)
+SELECT p.nombre, p.precio, p.descripcion, p.url_imagen, TRUE, p.id_categoria,
+       (SELECT id FROM restaurante WHERE nit = '900000000-1')
+FROM (
+    SELECT 'Empanada de carne'   AS nombre,  3500 AS precio, 'Empanada frita rellena de carne y papa'             AS descripcion, 'https://example.com/platos/empanada.png'      AS url_imagen, 1 AS id_categoria
+    UNION ALL SELECT 'Arepa con queso',        4000, 'Arepa asada con queso campesino',                         'https://example.com/platos/arepa.png',         1
+    UNION ALL SELECT 'Patacones con hogao',    5000, 'Patacones crujientes con hogao de tomate y cebolla',      'https://example.com/platos/patacones.png',     1
+    UNION ALL SELECT 'Bandeja paisa',         25000, 'Frijoles, arroz, carne, chicharron, huevo y arepa',       'https://example.com/platos/bandeja-paisa.png', 2
+    UNION ALL SELECT 'Ajiaco bogotano',       22000, 'Sopa de pollo con papa criolla, mazorca y guascas',       'https://example.com/platos/ajiaco.png',        2
+    UNION ALL SELECT 'Arroz con pollo',       18000, 'Arroz con pollo desmechado y verduras',                   'https://example.com/platos/arroz-pollo.png',   2
+    UNION ALL SELECT 'Trucha a la plancha',   26000, 'Trucha fresca con patacon y ensalada',                    'https://example.com/platos/trucha.png',        2
+    UNION ALL SELECT 'Flan de caramelo',       8000, 'Flan casero con caramelo',                                'https://example.com/platos/flan.png',          3
+    UNION ALL SELECT 'Tres leches',            9000, 'Torta humeda de tres leches',                             'https://example.com/platos/tres-leches.png',   3
+    UNION ALL SELECT 'Brownie con helado',    10000, 'Brownie de chocolate con helado de vainilla',             'https://example.com/platos/brownie.png',       3
+    UNION ALL SELECT 'Limonada natural',       4500, 'Limonada fria con hierbabuena',                           'https://example.com/platos/limonada.png',      4
+    UNION ALL SELECT 'Cafe americano',         4000, 'Cafe negro de la casa',                                   'https://example.com/platos/cafe.png',          4
+    UNION ALL SELECT 'Jugo de maracuya',       5000, 'Jugo natural de maracuya en agua',                        'https://example.com/platos/maracuya.png',      4
+) p;
+
 SELECT id, correo, rol FROM usuario;
+
+SELECT p.id, p.nombre, p.precio, c.nombre AS categoria
+FROM plato p
+         JOIN categoria c ON c.id = p.id_categoria
+WHERE p.id_restaurante = (SELECT id FROM restaurante WHERE nit = '900000000-1')
+ORDER BY p.id;
 
